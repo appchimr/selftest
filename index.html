@@ -5,74 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Self CHIMR • Inscriptions</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f8fafc; color: #0f172a; padding-bottom: 40px; }
-        header { background: white; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
-        .logo-title { font-size: 20px; font-weight: 800; color: #0f172a; }
+        header { background: white; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 50; }
+        .logo-title { font-size: 20px; font-weight: 800; }
         main { max-width: 450px; margin: 0 auto; padding: 16px; }
-        h2 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 12px; padding-left: 4px; }
+        h2 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 12px; }
         
-        .grid-jours { display: flex; justify-content: space-between; gap: 6px; width: 100%; }
-        .btn-jour { flex: 1; height: 85px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; min-width: 0; }
-        .btn-jour .j-nom { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; }
-        .btn-jour .j-num { font-size: 20px; font-weight: 800; color: #0f172a; margin-top: 2px; }
-        .btn-jour .j-mois { font-size: 9px; font-weight: 600; color: #94a3b8; margin-top: 1px; }
-        .btn-jour.bloque { background: #f1f5f9; border-color: #e2e8f0; opacity: 0.6; cursor: not-allowed; }
-        .btn-jour.actif { background: #0f172a; border-color: #0f172a; }
-        .btn-jour.actif .j-num { color: white; }
+        .grid-jours { display: flex; justify-content: space-between; gap: 6px; }
+        .btn-jour { flex: 1; height: 85px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-jour.actif { background: #0f172a; color: white; }
         
-        .hidden { display: none !important; }
-        .space-form { margin-top: 24px; }
-        
-        .card-menu { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .card-menu .content { flex: 1; }
-        .type-a { display: inline-block; font-size: 10px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 4px 10px; border-radius: 6px; margin-bottom: 10px; }
-        .type-b { display: inline-block; font-size: 10px; font-weight: 800; color: #047857; background: #d1fae5; padding: 4px 10px; border-radius: 6px; margin-bottom: 10px; }
-        .plat-nom { font-size: 15px; font-weight: 700; color: #334155; margin-bottom: 8px; }
-        
+        .card-menu { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; margin-bottom: 12px; cursor: pointer; }
         .card-menu-input:checked + .card-menu { border-color: #0f172a; background: #f8fafc; }
-        
-        .bloc-info { background: white; border: 1px solid #e2e8f0; padding: 16px; border-radius: 20px; margin-bottom: 20px; }
-        .input-group { margin-bottom: 12px; }
-        .input-group input, .input-group select { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; }
         
         .btn-submit { width: 100%; background: #0f172a; color: white; border: none; padding: 16px; border-radius: 16px; font-weight: 700; cursor: pointer; }
         .verif-box { background: white; border: 2px solid #e2e8f0; padding: 16px; border-radius: 20px; margin-bottom: 20px; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <header><h1 class="logo-title">Self CHIMR</h1></header>
     <main>
-        <div id="zone-chargement" class="chargement">🔄 Chargement...</div>
+        <div id="zone-chargement">🔄 Chargement...</div>
         <div id="app-contenu" class="hidden">
             <div class="verif-box">
                 <h2>🔍 Vérifier mes inscriptions</h2>
+                <input type="text" id="nom_recherche" placeholder="Votre nom..." style="width:100%; padding:8px; margin-bottom:8px;">
                 <button type="button" class="btn-submit" style="background:#64748b;" onclick="verifierMesReservations()">Voir mes réservations</button>
                 <div id="resultat-recherche" style="margin-top: 10px; font-size: 13px;"></div>
             </div>
 
             <div id="liste-jours" class="grid-jours"></div>
             
-            <form id="form-commande" class="hidden space-form">
+            <form id="form-commande" class="hidden">
                 <input type="radio" id="menuA" name="choix_menu" value="Menu A" class="card-menu-input hidden" required>
-                <label for="menuA" class="card-menu"><div class="content"><span class="type-a">Menu A</span><div id="label-menu-a" class="plat-nom"></div></div></label>
+                <label for="menuA" class="card-menu">Menu A</label>
                 
                 <input type="radio" id="menuB" name="choix_menu" value="Menu B" class="card-menu-input hidden">
-                <label for="menuB" class="card-menu"><div class="content"><span class="type-b">Menu B</span><div id="label-menu-b" class="plat-nom"></div></div></label>
+                <label for="menuB" class="card-menu">Menu B</label>
                 
-                <div class="bloc-info">
-                    <div class="input-group">
-                        <label>Nom & Prénom</label>
-                        <input type="text" id="nom_client" required>
-                    </div>
-                </div>
-                <button type="submit" id="btn-submit" class="btn-submit">Confirmer la commande</button>
+                <input type="text" id="nom_client" placeholder="Votre nom" required style="width:100%; padding:12px; margin-bottom:12px;">
+                <button type="submit" id="btn-submit" class="btn-submit">Confirmer</button>
             </form>
         </div>
     </main>
 
     <script>
-        const URL_SCRIPT_GOOGLE = "VOTRE_URL_ICI"; // REMPLACEZ PAR VOTRE URL /EXEC
+        const URL_SCRIPT_GOOGLE = "https://script.google.com/macros/s/AKfycbzcCFLxV_IxqN6zToLlGcCysRZKlbZWFYv2vla3vx8nSV2-BTzdubh9GLmIJ9XMVhjD/exec";
         
         function chargerMenus() {
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirMenus")
@@ -80,14 +60,13 @@
             .then(data => {
                 document.getElementById('zone-chargement').classList.add('hidden');
                 document.getElementById('app-contenu').classList.remove('hidden');
-                // ... suite de votre logique de calendrier
             })
             .catch(() => { document.getElementById('zone-chargement').textContent = "❌ Erreur de catalogue"; });
         }
 
         function verifierMesReservations() {
-            const nom = document.getElementById('nom_client').value.trim();
-            if (!nom) { alert("Saisissez votre nom d'abord."); return; }
+            const nom = document.getElementById('nom_recherche').value.trim();
+            if (!nom) { alert("Saisissez votre nom."); return; }
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
             .then(res => res.json())
             .then(data => {
@@ -100,19 +79,18 @@
 
         document.getElementById('form-commande').addEventListener('submit', function(e) {
             e.preventDefault();
-            // Utilisation de fetch standard sans no-cors pour l'envoi
             fetch(URL_SCRIPT_GOOGLE, {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({
                     action: "enregistrerCommande",
-                    date: dateSelectionneeISO,
+                    date: "2026-06-07",
                     nom: document.getElementById('nom_client').value,
                     menu: document.querySelector('input[name="choix_menu"]:checked').value,
                     mode: "Sur place",
                     heure: "12:00"
                 })
-            }).then(() => alert("Enregistré !"));
+            }).then(() => alert("🎉 Réservation enregistrée !"));
         });
 
         chargerMenus();
