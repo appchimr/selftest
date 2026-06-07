@@ -9,7 +9,7 @@
         body { background-color: #f8fafc; padding: 20px; color: #0f172a; }
         main { max-width: 450px; margin: 0 auto; background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
         h1 { font-size: 20px; font-weight: 800; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; }
         .btn { width: 100%; padding: 14px; background: #0f172a; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
         .resa-card { border: 1px solid #e2e8f0; padding: 15px; margin-top: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
         .btn-cancel { background: #ef4444; color: white; padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; }
@@ -38,8 +38,11 @@
                 conteneur.innerHTML = mesResas.length ? "" : "Aucune réservation trouvée pour ce nom.";
                 
                 mesResas.forEach(r => {
-                    // Conversion de la date YYYY-MM-DD en format "Lundi 8 juin"
-                    const dateObj = new Date(r.date + "T00:00:00"); 
+                    // Correction ici pour éviter le décalage de date : 
+                    // On découpe la chaine "YYYY-MM-DD" manuellement
+                    const parts = r.date.split('-');
+                    const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                    
                     const dateLisible = dateObj.toLocaleDateString('fr-FR', { 
                         weekday: 'long', 
                         day: 'numeric', 
@@ -50,7 +53,7 @@
                     div.className = 'resa-card';
                     div.innerHTML = `
                         <div style="font-size: 14px;">
-                            <strong>${dateLisible}</strong><br>
+                            <strong>${dateLisible.charAt(0).toUpperCase() + dateLisible.slice(1)}</strong><br>
                             <span style="color: #64748b; font-size: 12px;">${r.menu} - ${r.mode} (${r.heure})</span>
                         </div>
                         <button class="btn-cancel" onclick="annuler('${r.nom}', '${r.date}')">Annuler</button>
@@ -69,7 +72,7 @@
                 body: new URLSearchParams({ action: "annulerInscription", nom: nom, date: date })
             }).then(() => { 
                 alert("Réservation annulée."); 
-                chercher(); // Rafraîchir la liste après annulation
+                chercher(); 
             });
         }
     </script>
