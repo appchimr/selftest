@@ -55,6 +55,10 @@
         
         .btn-submit { width: 100%; background: #0f172a; color: white; border: none; font-size: 13px; font-weight: 700; text-transform: uppercase; padding: 16px; border-radius: 16px; cursor: pointer; }
         .chargement { text-align: center; padding: 30px; font-weight: 600; color: #64748b; }
+        
+        /* Style pour la vérification */
+        .verif-box { background: white; border: 2px solid #e2e8f0; padding: 16px; border-radius: 20px; margin-bottom: 20px; }
+        .btn-verif { width: 100%; background: #e2e8f0; color: #475569; border: none; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 12px; border-radius: 12px; cursor: pointer; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -67,6 +71,12 @@
         <div id="zone-chargement" class="chargement">🔄 Récupération des menus en cours...</div>
         
         <div id="app-contenu" class="hidden">
+            <div class="verif-box">
+                <h2 style="margin-bottom:8px;">🔍 Vérifier mes inscriptions</h2>
+                <button type="button" class="btn-verif" onclick="verifierMesReservations()">Voir mes réservations</button>
+                <div id="resultat-recherche" style="margin-top: 10px; font-size: 13px; color: #334155;"></div>
+            </div>
+
             <div style="margin-bottom: 20px;">
                 <h2>📅 Prochains jours disponibles</h2>
                 <div id="liste-jours" class="grid-jours"></div>
@@ -134,6 +144,31 @@
         let dateSelectionneeISO = "";
         let menusDuServeur = {};
 
+        // NOUVELLE FONCTION DE VÉRIFICATION
+        function verifierMesReservations() {
+            const nomSaisi = document.getElementById('nom_client').value.trim();
+            if (!nomSaisi) { alert("Veuillez saisir votre nom dans le formulaire en bas d'abord."); return; }
+            
+            const zoneResultat = document.getElementById('resultat-recherche');
+            zoneResultat.innerHTML = "Recherche...";
+
+            fetch(URL_SCRIPT_GOOGLE + "?action=vérifierInscription&nom=" + encodeURIComponent(nomSaisi))
+            .then(res => res.json())
+            .then(data => {
+                if (data.length === 0) {
+                    zoneResultat.innerHTML = "❌ Aucune réservation trouvée pour <strong>" + nomSaisi + "</strong>.";
+                } else {
+                    let html = "<strong>Vos inscriptions :</strong><ul style='margin-left:20px; margin-top:5px;'>";
+                    data.forEach(r => {
+                        html += `<li>${r.date} : ${r.menu} (${r.mode})</li>`;
+                    });
+                    html += "</ul>";
+                    zoneResultat.innerHTML = html;
+                }
+            })
+            .catch(() => zoneResultat.innerHTML = "Erreur de connexion.");
+        }
+
         function chargerMenus() {
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirMenus")
             .then(res => res.json())
@@ -190,8 +225,6 @@
 
         document.getElementById('form-commande').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // SAUVEGARDE DU NOM DANS LE NAVIGATEUR
             const nomSaisi = document.getElementById('nom_client').value.trim();
             localStorage.setItem('nomUserSelf', nomSaisi);
 
@@ -216,7 +249,6 @@
             });
         });
 
-        // CHARGEMENT DU NOM AU LANCEMENT
         window.addEventListener('DOMContentLoaded', function() {
             chargerMenus();
             const nomSauvegarde = localStorage.getItem('nomUserSelf');
