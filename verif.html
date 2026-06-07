@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Réservations • Self CHIMR</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f8fafc; }
+        main { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; }
+        .btn { width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .resa-card { border: 1px solid #e2e8f0; padding: 10px; margin-top: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-cancel { background: #ef4444; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Mes Réservations</h1>
+        <input type="text" id="nom_client" placeholder="Entrez votre nom...">
+        <button class="btn" onclick="chercher()">Voir mes réservations</button>
+        <div id="liste-resultats"></div>
+    </main>
+
+    <script>
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzcCFLxV_IxqN6zToLlGcCysRZKlbZWFYv2vla3vx8nSV2-BTzdubh9GLmIJ9XMVhjD/exec";
+
+        function chercher() {
+            const nom = document.getElementById('nom_client').value;
+            fetch(URL_SCRIPT + "?action=obtenirInscriptions")
+            .then(res => res.json())
+            .then(data => {
+                const mesResas = data.filter(r => r.nom.toLowerCase() === nom.toLowerCase());
+                const conteneur = document.getElementById('liste-resultats');
+                conteneur.innerHTML = mesResas.length ? "" : "Aucune réservation trouvée.";
+                mesResas.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'resa-card';
+                    div.innerHTML = `<span>${r.date} - ${r.menu}</span> 
+                                     <button class="btn-cancel" onclick="annuler('${r.nom}', '${r.date}')">Annuler</button>`;
+                    conteneur.appendChild(div);
+                });
+            });
+        }
+
+        function annuler(nom, date) {
+            if(!confirm("Annuler cette réservation ?")) return;
+            fetch(URL_SCRIPT, {
+                method: "POST",
+                mode: "no-cors",
+                body: new URLSearchParams({ action: "annulerInscription", nom: nom, date: date })
+            }).then(() => { alert("Réservation annulée."); chercher(); });
+        }
+    </script>
+</body>
+</html>
