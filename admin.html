@@ -162,7 +162,11 @@
                         const items = list.filter(c => c.menu === m);
                         if (items.length > 0) {
                             let tr = document.createElement('tr');
-                            tr.innerHTML = `<td colspan="3" style="background:#f1f5f9; font-weight:800; font-size:12px;">${m.toUpperCase()} (${items.length})</td>`;
+                            let bgColor = (m === 'Menu A') ? '#fef3c7' : '#d1fae5';
+                            let textColor = (m === 'Menu A') ? '#b45309' : '#047857';
+                            tr.innerHTML = `<td colspan="3" style="background:${bgColor}; color:${textColor}; font-weight:800; font-size:12px; text-transform:uppercase; padding: 8px 12px;">
+                                                ${m} (${items.length})
+                                            </td>`;
                             corps.appendChild(tr);
                             items.forEach(cmd => {
                                 let r = document.createElement('tr');
