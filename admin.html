@@ -52,15 +52,15 @@
         <p class="subtitle">Gérez vos menus et consultez les inscriptions.</p>
         
         <div class="segmented">
-            <input type="radio" id="tab-actuelle" name="onglet-admin" value="actuelle" class="hidden" checked onchange="basculerOnglet('actuelle')">
+            <input type="radio" id="tab-registre" name="onglet-admin" value="registre" class="hidden" checked onchange="basculerOnglet('registre')">
+            <label for="tab-registre">📊 Liste cuisine</label>
+            <input type="radio" id="tab-actuelle" name="onglet-admin" value="actuelle" class="hidden" onchange="basculerOnglet('actuelle')">
             <label for="tab-actuelle">📅 Semaine en cours</label>
             <input type="radio" id="tab-suivante" name="onglet-admin" value="suivante" class="hidden" onchange="basculerOnglet('suivante')">
             <label for="tab-suivante">⏩ Semaine suivante</label>
-            <input type="radio" id="tab-registre" name="onglet-admin" value="registre" class="hidden" onchange="basculerOnglet('registre')">
-            <label for="tab-registre">📊 Liste cuisine</label>
         </div>
 
-        <div id="section-menus">
+        <div id="section-menus" class="hidden">
             <div id="titre-dates" class="date-semaine-titre">Chargement...</div>
             <form id="form-admin">
                 <div id="conteneur-jours"></div>
@@ -68,7 +68,7 @@
             </form>
         </div>
 
-        <div id="section-registre" class="hidden">
+        <div id="section-registre">
             <select id="select-jour" class="select-jour-registre" onchange="chargerInscriptionsDuJour()"></select>
             <div class="stats-grid">
                 <div class="stat-card"><div id="total-a" class="val">0</div><div class="lbl">🍖 TOTAL MENU A</div></div>
@@ -182,7 +182,7 @@
         window.onload = () => {
             fetch(`${URL_SCRIPT_GOOGLE}?action=obtenirMenus`)
             .then(res => res.json())
-            .then(donnees => { menusServeurComplets = donnees; genererInterfaceAdmin(); });
+            .then(donnees => { menusServeurComplets = donnees; });
 
             const select = document.getElementById('select-jour');
             const aujourdhui = new Date();
