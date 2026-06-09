@@ -247,16 +247,26 @@
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
             .then(res => res.json())
             .then(data => {
-                // On filtre les réservations par nom et on trie par date
+                // On filtre les réservations par nom
                 const mesRes = data.filter(r => r.nom.toLowerCase() === nomSaisi.toLowerCase());
-                mesRes.sort((a, b) => a.date.localeCompare(b.date));
+                
+                // Nouveau filtrage temporel
+                const maintenant = new Date();
+                const resFiltrees = mesRes.filter(r => {
+                    const d = new Date(r.date + "T12:00:00");
+                    const estAujourdhui = d.toDateString() === maintenant.toDateString();
+                    // On exclut si date passée (hors aujourd'hui) OU si aujourd'hui après 14h
+                    if ((d < maintenant && !estAujourdhui) || (estAujourdhui && maintenant.getHours() >= 14)) return false;
+                    return true;
+                });
+                
+                resFiltrees.sort((a, b) => a.date.localeCompare(b.date));
 
-                if (mesRes.length === 0) {
-                    conteneur.innerHTML = '<div class="no-res">Aucune réservation trouvée à ce nom.</div>';
+                if (resFiltrees.length === 0) {
+                    conteneur.innerHTML = '<div class="no-res">Aucune réservation à venir.</div>';
                 } else {
                     conteneur.innerHTML = "";
-                    mesRes.forEach(r => {
-                        // Formatage date lisible
+                    resFiltrees.forEach(r => {
                         const d = new Date(r.date + "T12:00:00");
                         const dateLisible = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
                         
