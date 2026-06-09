@@ -170,6 +170,7 @@
                             corps.appendChild(tr);
                             items.forEach(cmd => {
                                 let r = document.createElement('tr');
+                                // Affichage direct de l'heure stockée (pas de traitement complexe)
                                 r.innerHTML = `<td>⬜</td><td><strong>${cmd.nom}</strong></td><td>${cmd.heure}</td>`;
                                 corps.appendChild(r);
                             });
