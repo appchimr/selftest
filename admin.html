@@ -18,26 +18,28 @@
         .hidden { display: none !important; }
 
         /* Styles Registre & Tableaux */
-        .select-jour-registre { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 20px; }
+        .select-jour-registre { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 20px; font-size: 14px; font-weight: 600; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-        th { background: #f8fafc; text-transform: uppercase; font-size: 11px; }
+        th { background: #f8fafc; text-transform: uppercase; font-size: 11px; color: #475569; }
         
-        .btn-imprimer { width: 100%; background: #0284c7; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+        .btn-imprimer { width: 100%; background: #0284c7; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .btn-sauvegarder { width: 100%; background: #0f172a; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 15px; }
+        
+        .jour-bloc { border: 1px solid #e2e8f0; padding: 16px; border-radius: 14px; margin-bottom: 16px; background: #f8fafc; }
+        .jour-titre { font-size: 15px; font-weight: 800; color: #0284c7; margin-bottom: 10px; }
+        .input-group { margin-bottom: 10px; }
+        .input-group label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+        .input-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
 
-        /* --- OPTIMISATION IMPRESSION --- */
+        /* OPTIMISATION IMPRESSION */
         @media print {
             body { background: white; padding: 0; }
             main { box-shadow: none; width: 100%; padding: 0; }
             .segmented, .no-print, .btn-imprimer, .select-jour-registre, #section-menus { display: none !important; }
-            
-            /* Titre d'impression */
             #section-registre::before { content: "LISTE DES INSCRITS : " attr(data-date-print); display: block; font-size: 20px; font-weight: 800; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            
-            /* Compactage des tableaux */
-            table { font-size: 11px !important; margin-bottom: 10px; page-break-inside: avoid; }
+            table { font-size: 11px !important; page-break-inside: avoid; }
             td, th { padding: 3px 6px !important; }
-            .stat-card { display: none; }
         }
     </style>
 </head>
@@ -56,28 +58,28 @@
         <div id="section-registre">
             <select id="select-jour" class="select-jour-registre" onchange="chargerInscriptionsDuJour()"></select>
             <div id="zone-tableaux">
-                <div class="bloc-tableau">
-                    <table id="table-liste">
-                        <thead><tr><th>NOM</th><th>MENU</th><th>MODE</th><th>HEURE</th></tr></thead>
-                        <tbody id="corps-liste"></tbody>
-                    </table>
-                </div>
+                <table id="table-liste">
+                    <thead><tr><th>NOM</th><th>MENU</th><th>MODE</th><th>HEURE</th></tr></thead>
+                    <tbody id="corps-liste"></tbody>
+                </table>
             </div>
             <button class="btn-imprimer" onclick="window.print()">🖨️ Imprimer la liste synthétique</button>
         </div>
 
         <div id="section-menus" class="hidden">
             <div id="conteneur-jours"></div>
-            <button onclick="sauvegarderMenus()" class="btn-imprimer" style="background:#0f172a">🚀 Publier les menus</button>
+            <button onclick="sauvegarderMenus()" class="btn-sauvegarder">🚀 Publier les menus</button>
         </div>
     </main>
 
     <script>
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzcCFLxV_IxqN6zToLlGcCysRZKlbZWFYv2vla3vx8nSV2-BTzdubh9GLmIJ9XMVhjD/exec";
+        let menusServeurComplets = {};
 
         function basculerOnglet(type) {
             document.getElementById('section-registre').classList.toggle('hidden', type !== 'registre');
             document.getElementById('section-menus').classList.toggle('hidden', type !== 'menus');
+            if(type === 'menus') genererInterfaceMenus();
         }
 
         function chargerInscriptionsDuJour() {
@@ -89,27 +91,50 @@
             .then(data => {
                 const corps = document.getElementById('corps-liste');
                 corps.innerHTML = "";
-                const journee = data.filter(c => c.date === jour);
-                
-                journee.forEach(cmd => {
+                data.filter(c => c.date === jour).forEach(cmd => {
                     corps.innerHTML += `<tr><td>${cmd.nom}</td><td>${cmd.menu}</td><td>${cmd.mode}</td><td>${cmd.heure}</td></tr>`;
                 });
             });
         }
 
-        // Initialisation dates
-        const select = document.getElementById('select-jour');
-        const aujourdhui = new Date();
-        for (let i = 0; i < 30; i++) {
-            let d = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate() + i);
-            if (d.getDay() !== 0 && d.getDay() !== 6) {
-                let opt = document.createElement('option');
-                opt.value = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
-                opt.textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-                select.appendChild(opt);
+        function genererInterfaceMenus() {
+            const conteneur = document.getElementById('conteneur-jours');
+            conteneur.innerHTML = "";
+            for (let i = 0; i < 5; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                let iso = d.toISOString().split('T')[0];
+                conteneur.innerHTML += `<div class="jour-bloc">
+                    <div class="jour-titre" data-date="${iso}">📅 ${d.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric'})}</div>
+                    <div class="input-group"><label>Menu A</label><input type="text" id="a-${iso}" value="${menusServeurComplets[iso]?.A || ''}"></div>
+                    <div class="input-group"><label>Menu B</label><input type="text" id="b-${iso}" value="${menusServeurComplets[iso]?.B || ''}"></div>
+                </div>`;
             }
         }
-        chargerInscriptionsDuJour();
+
+        function sauvegarderMenus() {
+            let paquets = [];
+            document.querySelectorAll('.jour-bloc').forEach(b => {
+                let d = b.querySelector('.jour-titre').getAttribute('data-date');
+                paquets.push({ date: d, menuA: document.getElementById('a-'+d).value, menuB: document.getElementById('b-'+d).value });
+            });
+            fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: new URLSearchParams({ action: "enregistrerMenus", donnees: JSON.stringify(paquets) }) })
+            .then(() => alert("🎉 Publié !"));
+        }
+
+        window.onload = () => {
+            fetch(`${URL_SCRIPT}?action=obtenirMenus`).then(res => res.json()).then(d => menusServeurComplets = d);
+            const select = document.getElementById('select-jour');
+            for (let i = 0; i < 30; i++) {
+                let d = new Date(); d.setDate(d.getDate() + i);
+                if (d.getDay() !== 0 && d.getDay() !== 6) {
+                    let opt = document.createElement('option');
+                    opt.value = d.toISOString().split('T')[0];
+                    opt.textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+                    select.appendChild(opt);
+                }
+            }
+            chargerInscriptionsDuJour();
+        };
     </script>
 </body>
 </html>
