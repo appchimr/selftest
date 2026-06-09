@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -38,11 +39,50 @@
         .no-data { text-align: center; padding: 20px; color: #94a3b8; font-style: italic; font-size: 13px; }
         .btn-imprimer { width: 100%; background: #0284c7; color: white; border: none; font-size: 13px; font-weight: 700; text-transform: uppercase; padding: 14px; border-radius: 10px; cursor: pointer; margin-top: 10px; }
 
+        /* --- OPTIMISATION SPÉCIFIQUE IMPRESSION --- */
         @media print {
-            body > main > h1, body > main > .subtitle, body > main > .segmented, body > main > #section-menus, .btn-imprimer,
-            .select-jour-registre { display: none !important; }
-            .section-inscriptions::before { content: "Registre des inscriptions du : " attr(data-date-print); display: block; font-size: 18px; font-weight: 800; margin-bottom: 20px; text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            main { box-shadow: none; border-radius: 0; width: 100%; max-width: none; padding: 0; }
+            /* Masquer tout ce qui est inutile à l'impression */
+            body > main > h1, 
+            body > main > .subtitle, 
+            body > main > .segmented, 
+            #section-menus, 
+            .btn-imprimer, 
+            .select-jour-registre,
+            .stats-grid { 
+                display: none !important; 
+            }
+
+            /* Ajuster la largeur principale */
+            main { 
+                box-shadow: none; 
+                width: 100%; 
+                max-width: none; 
+                padding: 0; 
+            }
+
+            /* Mettre le titre personnalisé pour l'impression */
+            #section-registre::before { 
+                content: "LISTE DES INSCRITS : " attr(data-date-print); 
+                display: block; 
+                font-size: 16px; 
+                font-weight: 800; 
+                margin-bottom: 10px; 
+                border-bottom: 2px solid #000; 
+            }
+
+            /* Compacter les tableaux */
+            .bloc-tableau { margin-bottom: 5px; }
+            .titre-tableau { font-size: 11px; margin-bottom: 2px; }
+            
+            table { font-size: 10px !important; }
+            th, td { padding: 2px 4px !important; }
+            
+            /* Forcer l'affichage côte à côte */
+            #zone-tableaux { 
+                display: grid; 
+                grid-template-columns: 1fr 1fr; 
+                gap: 10px; 
+            }
         }
     </style>
 </head>
@@ -170,7 +210,6 @@
                             corps.appendChild(tr);
                             items.forEach(cmd => {
                                 let r = document.createElement('tr');
-                                // Affichage direct de l'heure stockée (pas de traitement complexe)
                                 r.innerHTML = `<td>⬜</td><td><strong>${cmd.nom}</strong></td><td>${cmd.heure}</td>`;
                                 corps.appendChild(r);
                             });
