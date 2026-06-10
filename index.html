@@ -328,6 +328,7 @@
                 alert('Erreur de connexion, réessaie.');
             });
         }
+        function chargerMenus() {
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirMenus")
             .then(res => res.json())
             .then(donnees => {
