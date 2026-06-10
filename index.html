@@ -89,6 +89,13 @@
         .resa-item .badge-menu-b { font-size: 10px; font-weight: 800; color: #047857; background: #d1fae5; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
         .resa-item .resa-plat { font-size: 15px; font-weight: 700; color: #334155; line-height: 1.4; margin-bottom: 4px; }
         .resa-item .resa-detail { font-size: 12px; color: #64748b; }
+        .resa-item .resa-footer { display: flex; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; }
+        .btn-annuler { background: none; border: 1px solid #fecaca; color: #ef4444; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
+        .btn-annuler:disabled { opacity: 0.5; cursor: not-allowed; }
+        .confirm-annul { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px 12px; margin-top: 8px; font-size: 12px; color: #dc2626; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .confirm-annul .confirm-btns { display: flex; gap: 6px; flex-shrink: 0; }
+        .confirm-annul .btn-oui { background: #ef4444; color: white; border: none; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
+        .confirm-annul .btn-non { background: #e2e8f0; color: #475569; border: none; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
         .resa-vide { text-align: center; padding: 30px 16px; color: #94a3b8; font-size: 14px; font-weight: 600; }
         .resa-vide span { display: block; font-size: 32px; margin-bottom: 10px; }
     </style>
@@ -266,13 +273,23 @@
                             const platAffiche = platNom
                                 ? `<div class="resa-plat">${platNom}</div>`
                                 : `<div class="resa-plat" style="color:#94a3b8; font-style:italic;">Menu à venir</div>`;
-                            return `<div class="resa-item">
+                            return `<div class="resa-item" id="resa-${datePropre}">
                                 <div class="resa-header">
                                     <div class="resa-date">${formaterDate(r.date)}</div>
                                     <span class="${badgeClass}">${badgeLabel}</span>
                                 </div>
                                 ${platAffiche}
                                 <div class="resa-detail">${r.mode}${r.heure ? ' · ' + r.heure : ''}</div>
+                                <div class="resa-footer">
+                                    <button class="btn-annuler" onclick="demanderAnnulation('${datePropre}', '${nom}')">🗑️ Annuler</button>
+                                </div>
+                                <div class="confirm-annul hidden" id="confirm-${datePropre}">
+                                    <span>Confirmer l'annulation ?</span>
+                                    <div class="confirm-btns">
+                                        <button class="btn-non" onclick="annulerConfirm('${datePropre}')">Non</button>
+                                        <button class="btn-oui" onclick="confirmerAnnulation('${datePropre}', '${nom}')">Oui, annuler</button>
+                                    </div>
+                                </div>
                             </div>`;
                         }).join('');
                 }
@@ -282,7 +299,35 @@
             });
         }
 
-        function chargerMenus() {
+        function demanderAnnulation(date, nom) {
+            document.getElementById('confirm-' + date).classList.remove('hidden');
+        }
+
+        function annulerConfirm(date) {
+            document.getElementById('confirm-' + date).classList.add('hidden');
+        }
+
+        function confirmerAnnulation(date, nom) {
+            const btnOui = document.querySelector(`#confirm-${date} .btn-oui`);
+            btnOui.disabled = true;
+            btnOui.textContent = '...';
+
+            fetch(URL_SCRIPT_GOOGLE, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ action: 'annulerInscription', nom: nom, date: date })
+            }).then(() => {
+                const carte = document.getElementById('resa-' + date);
+                carte.style.transition = 'opacity 0.3s';
+                carte.style.opacity = '0';
+                setTimeout(() => carte.remove(), 300);
+            }).catch(() => {
+                btnOui.disabled = false;
+                btnOui.textContent = 'Oui, annuler';
+                alert('Erreur de connexion, réessaie.');
+            });
+        }
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirMenus")
             .then(res => res.json())
             .then(donnees => {
