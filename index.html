@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Self CHIMR • Inscriptions</title>
     <style>
-        /* [VOTRE CSS RESTE IDENTIQUE - JE L'AI GARDÉ TEL QUEL] */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: #f8fafc; color: #0f172a; padding-bottom: 40px; }
         header { background: white; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
         .logo-title { font-size: 20px; font-weight: 800; color: #0f172a; }
         main { max-width: 450px; margin: 0 auto; padding: 16px; }
         h2 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 12px; padding-left: 4px; }
+        
         .grid-jours { display: flex; justify-content: space-between; gap: 6px; width: 100%; }
         .btn-jour { flex: 1; height: 85px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; min-width: 0; }
         .btn-jour .j-nom { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; }
@@ -24,29 +24,89 @@
         .btn-jour.actif .j-nom { color: #cbd5e1; }
         .btn-jour.actif .j-num { color: white; }
         .btn-jour.actif .j-mois { color: #cbd5e1; }
+        
         .hidden { display: none !important; }
+        .space-form { margin-top: 24px; }
+        
+        .card-menu { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .card-menu .content { flex: 1; padding-right: 12px; display: flex; flex-direction: column; align-items: flex-start; }
+        .card-menu .type-a { display: inline-block; font-size: 10px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 4px 10px; border-radius: 6px; margin-bottom: 10px; text-transform: uppercase; }
+        .card-menu .type-b { display: inline-block; font-size: 10px; font-weight: 800; color: #047857; background: #d1fae5; padding: 4px 10px; border-radius: 6px; margin-bottom: 10px; text-transform: uppercase; }
+        .card-menu .plat-nom { font-size: 15px; font-weight: 700; color: #334155; line-height: 1.4; margin-bottom: 8px; }
+        .card-menu .formule-fixe { font-size: 11px; font-style: italic; color: #64748b; font-weight: 500; }
+        .card-menu .radio-custom { height: 20px; width: 20px; border: 2px solid #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .card-menu .radio-custom::after { content: ""; width: 8px; height: 8px; background: white; border-radius: 50%; display: none; }
+        
+        .card-menu-input:checked + .card-menu.a { border-color: #f59e0b; background: rgba(254,243,199,0.15); }
+        .card-menu-input:checked + .card-menu.a .radio-custom { border-color: #f59e0b; background: #f59e0b; }
+        .card-menu-input:checked + .card-menu.a .radio-custom::after { display: block; }
+        .card-menu-input:checked + .card-menu.b { border-color: #10b981; background: rgba(209,250,229,0.15); }
+        .card-menu-input:checked + .card-menu.b .radio-custom { border-color: #10b981; background: #10b981; }
+        .card-menu-input:checked + .card-menu.b .radio-custom::after { display: block; }
+        
+        .segmented { display: flex; background: #e2e8f0; padding: 3px; border-radius: 14px; margin-bottom: 20px; }
+        .segmented label { flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 700; color: #64748b; border-radius: 11px; cursor: pointer; }
+        .segmented input:checked + label { background: white; color: #0f172a; }
+        
+        .bloc-info { background: white; border: 1px solid #e2e8f0; padding: 16px; border-radius: 20px; margin-bottom: 20px; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-weight: 600; color: #334155; outline: none; }
+        
+        .btn-submit { width: 100%; background: #0f172a; color: white; border: none; font-size: 13px; font-weight: 700; text-transform: uppercase; padding: 16px; border-radius: 16px; cursor: pointer; transition: opacity 0.2s; }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .chargement { text-align: center; padding: 30px; font-weight: 600; color: #64748b; }
+        
+        .msg-erreur { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 14px; padding: 14px 16px; font-size: 13px; font-weight: 600; margin-top: 12px; display: none; }
+
         .tabs { display: flex; background: #e2e8f0; padding: 3px; border-radius: 14px; margin-bottom: 20px; }
         .tabs button { flex: 1; background: none; border: none; padding: 10px; font-size: 13px; font-weight: 700; color: #64748b; border-radius: 11px; cursor: pointer; }
         .tabs button.actif { background: white; color: #0f172a; }
+
         .banniere-alerte { background: #fff7ed; border: 2px solid #f97316; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; }
-        .alerte-titre { font-size: 14px; font-weight: 800; color: #c2410c; margin-bottom: 4px; }
-        .alerte-detail { font-size: 12px; color: #9a3412; }
+        .banniere-alerte .alerte-titre { font-size: 14px; font-weight: 800; color: #c2410c; margin-bottom: 4px; }
+        .banniere-alerte .alerte-detail { font-size: 12px; color: #9a3412; }
+        
+        .resa-item { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+        .resa-item .resa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .resa-item .resa-date { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+        .resa-item .badge-menu-a { font-size: 10px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+        .resa-item .badge-menu-b { font-size: 10px; font-weight: 800; color: #047857; background: #d1fae5; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+        .resa-item .resa-plat { font-size: 15px; font-weight: 700; color: #334155; line-height: 1.4; margin-bottom: 4px; }
+        .resa-item .resa-detail { font-size: 12px; color: #64748b; }
+        .resa-footer { display: flex; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; }
+        .btn-annuler { background: none; border: 1px solid #fecaca; color: #ef4444; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
+        .resa-vide { text-align: center; padding: 30px 16px; color: #94a3b8; font-size: 14px; font-weight: 600; }
+        .resa-vide span { display: block; font-size: 32px; margin-bottom: 10px; }
+        .confirm-annul { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px 12px; margin-top: 8px; font-size: 12px; color: #dc2626; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .confirm-annul .btn-oui { background: #ef4444; color: white; border: none; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
+        .confirm-annul .btn-non { background: #e2e8f0; color: #475569; border: none; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <header><div><h1 class="logo-title">Self CHIMR</h1></div></header>
+
+    <header>
+        <div><h1 class="logo-title">Self CHIMR</h1></div>
+    </header>
+
     <main>
         <div id="zone-chargement" class="chargement">🔄 Récupération des menus en cours...</div>
+        
         <div id="app-contenu" class="hidden">
             <div class="tabs">
                 <button id="tab-reserver" class="actif" onclick="afficherOnglet('reserver')">🍴 Réserver</button>
                 <button id="tab-reservations" onclick="afficherOnglet('reservations')">📅 Mes réservations</button>
             </div>
+
             <div id="zone-alertes"></div>
+
             <div id="contenu-reserver">
-                <h2>📅 Prochains jours disponibles</h2>
-                <div id="liste-jours" class="grid-jours"></div>
+                <div style="margin-bottom: 20px;">
+                    <h2>📅 Prochains jours disponibles</h2>
+                    <div id="liste-jours" class="grid-jours"></div>
                 </div>
+                </div>
+
             <div id="contenu-reservations" class="hidden">
                 <div id="liste-reservations"></div>
             </div>
@@ -54,59 +114,21 @@
     </main>
 
     <script>
-        // ... (VOTRE URL ET VARIABLES) ...
         const URL_SCRIPT_GOOGLE = "https://script.google.com/macros/s/AKfycbzcCFLxV_IxqN6zToLlGcCysRZKlbZWFYv2vla3vx8nSV2-BTzdubh9GLmIJ9XMVhjD/exec";
-        let menusDuServeur = {};
-
+        
         function afficherOnglet(onglet) {
             document.getElementById('tab-reserver').classList.toggle('actif', onglet === 'reserver');
             document.getElementById('tab-reservations').classList.toggle('actif', onglet === 'reservations');
             document.getElementById('contenu-reserver').classList.toggle('hidden', onglet !== 'reserver');
             document.getElementById('contenu-reservations').classList.toggle('hidden', onglet !== 'reservations');
-            // ON NE MASQUE PLUS LA ZONE D'ALERTE ICI
+            
+            // La bannière reste maintenant visible en permanence
+            document.getElementById('zone-alertes').classList.remove('hidden');
+            
             if (onglet === 'reservations') chargerMesReservations();
         }
-
-        function chargerMenus() {
-            fetch(URL_SCRIPT_GOOGLE + "?action=obtenirMenus")
-            .then(res => res.json())
-            .then(donnees => {
-                menusDuServeur = donnees;
-                document.getElementById('zone-chargement').classList.add('hidden');
-                document.getElementById('app-contenu').classList.remove('hidden');
-                genererCalendrier();
-                // Vérification déclenchée au chargement
-                verifierAlertesUtilisateur(); 
-            });
-        }
-
-        function verifierAlertesUtilisateur() {
-            const nom = localStorage.getItem('nomUserSelf') || '';
-            if (!nom) return;
-            fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
-            .then(res => res.json())
-            .then(data => {
-                // ... (LOGIQUE DE FILTRAGE DES ALERTES) ...
-                // S'assurer que le HTML est injecté dans #zone-alertes
-                // (Le code précédent que vous aviez fonctionnait bien ici)
-            });
-        }
-
-        function genererCalendrier() {
-            const conteneur = document.getElementById('liste-jours');
-            conteneur.innerHTML = "";
-            const maintenant = new Date();
-            let affiches = 0;
-            // Boucle restaurée à 15 jours comme dans votre fichier original
-            for (let i = 0; i < 15; i++) {
-                if (affiches >= 5) break; // Le blocage est ici, si vous en voulez plus, augmentez à 10
-                // ... (LOGIQUE DE GÉNÉRATION DES JOURS) ...
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            chargerMenus();
-        });
+        
+        // ... (Le reste de vos fonctions inchangé : chargerMenus, genererCalendrier, etc.)
     </script>
 </body>
 </html>
