@@ -111,6 +111,7 @@
             <div id="contenu-reserver">
                 <div style="margin-bottom: 20px;">
                     <h2>📅 Prochains jours disponibles</h2>
+                    <p style="font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:10px; padding-left:4px;">⏰ Réservation possible jusqu'à 10h30 le jour même</p>
                     <div id="liste-jours" class="grid-jours"></div>
                 </div>
                 
@@ -261,9 +262,13 @@
                 let jourSemaine = d.getDay();
                 
                 if (jourSemaine === 0 || jourSemaine === 6) continue;
-                if (i === 0 && heureActuelle >= 11) continue;
+                if (i === 0 && (heureActuelle > 10 || (heureActuelle === 10 && maintenant.getMinutes() >= 30))) continue;
 
-                let cle = d.toISOString().split('T')[0];
+                // Construction de la clé sans passer par UTC (évite le décalage horaire)
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                let cle = `${yyyy}-${mm}-${dd}`;
                 let menus = menusDuServeur[cle] || { A: "", B: "" };
                 let ouvert = (menus.A && menus.A.trim() !== "") || (menus.B && menus.B.trim() !== "");
                 
