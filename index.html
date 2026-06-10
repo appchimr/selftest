@@ -57,11 +57,6 @@
         .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
         .chargement { text-align: center; padding: 30px; font-weight: 600; color: #64748b; }
         
-        /* Style pour la vérification */
-        .verif-box { background: white; border: 2px solid #e2e8f0; padding: 16px; border-radius: 20px; margin-bottom: 20px; }
-        .btn-verif { width: 100%; background: #e2e8f0; color: #475569; border: none; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 12px; border-radius: 12px; cursor: pointer; margin-top: 8px; }
-
-        /* Écran de confirmation */
         .ecran-confirmation { text-align: center; padding: 40px 20px; }
         .confirmation-cercle { width: 80px; height: 80px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes pop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -73,15 +68,12 @@
         .confirmation-recap .recap-valeur { color: #0f172a; font-weight: 700; }
         .btn-nouvelle-resa { width: 100%; background: #0f172a; color: white; border: none; font-size: 13px; font-weight: 700; text-transform: uppercase; padding: 16px; border-radius: 16px; cursor: pointer; margin-top: 8px; }
 
-        /* Message d'erreur */
         .msg-erreur { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 14px; padding: 14px 16px; font-size: 13px; font-weight: 600; margin-top: 12px; display: none; }
 
-        /* Onglets */
         .tabs { display: flex; background: #e2e8f0; padding: 3px; border-radius: 14px; margin-bottom: 20px; }
         .tabs button { flex: 1; background: none; border: none; padding: 10px; font-size: 13px; font-weight: 700; color: #64748b; border-radius: 11px; cursor: pointer; }
         .tabs button.actif { background: white; color: #0f172a; }
 
-        /* Mes réservations */
         .resa-item { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
         .resa-item .resa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
         .resa-item .resa-date { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
@@ -91,15 +83,11 @@
         .resa-item .resa-detail { font-size: 12px; color: #64748b; }
         .resa-item .resa-footer { display: flex; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; }
         .btn-annuler { background: none; border: 1px solid #fecaca; color: #ef4444; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
-        .btn-annuler:disabled { opacity: 0.5; cursor: not-allowed; }
         .confirm-annul { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px 12px; margin-top: 8px; font-size: 12px; color: #dc2626; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .confirm-annul .confirm-btns { display: flex; gap: 6px; flex-shrink: 0; }
         .confirm-annul .btn-oui { background: #ef4444; color: white; border: none; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
         .confirm-annul .btn-non { background: #e2e8f0; color: #475569; border: none; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
         .resa-vide { text-align: center; padding: 30px 16px; color: #94a3b8; font-size: 14px; font-weight: 600; }
-        .resa-vide span { display: block; font-size: 32px; margin-bottom: 10px; }
 
-        /* Bannière alerte menu modifié */
         .banniere-alerte { background: #fff7ed; border: 2px solid #f97316; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; }
         .banniere-alerte .alerte-titre { font-size: 14px; font-weight: 800; color: #c2410c; margin-bottom: 4px; }
         .banniere-alerte .alerte-detail { font-size: 12px; color: #9a3412; }
@@ -124,17 +112,13 @@
         <div id="zone-chargement" class="chargement">🔄 Récupération des menus en cours...</div>
         
         <div id="app-contenu" class="hidden">
-
-            <!-- Onglets -->
             <div class="tabs">
                 <button id="tab-reserver" class="actif" onclick="afficherOnglet('reserver')">🍴 Réserver</button>
                 <button id="tab-reservations" onclick="afficherOnglet('reservations')">📅 Mes réservations</button>
             </div>
 
-            <!-- Bannière alertes menu modifié -->
             <div id="zone-alertes"></div>
 
-            <!-- Contenu onglet Réserver -->
             <div id="contenu-reserver">
                 <div style="margin-bottom: 20px;">
                     <h2>📅 Prochains jours disponibles</h2>
@@ -143,74 +127,70 @@
                 </div>
                 
                 <form id="form-commande" class="hidden space-form">
-                <div>
-                    <h2>1. Sélectionnez votre assiette</h2>
-                    <input type="radio" id="menuA" name="choix_menu" value="Menu A" class="card-menu-input hidden" required>
-                    <label for="menuA" class="card-menu a">
-                        <div class="content">
-                            <span class="type-a">🍖 Menu A</span>
-                            <span id="label-menu-a" class="plat-nom"></span>
-                            <span class="formule-fixe">Entrée + Plat + Fromage + Dessert</span>
-                        </div>
-                        <div class="radio-custom"></div>
-                    </label>
+                    <div>
+                        <h2>1. Sélectionnez votre assiette</h2>
+                        <input type="radio" id="menuA" name="choix_menu" value="Menu A" class="card-menu-input hidden" required>
+                        <label for="menuA" class="card-menu a">
+                            <div class="content">
+                                <span class="type-a">🍖 Menu A</span>
+                                <span id="label-menu-a" class="plat-nom"></span>
+                                <span class="formule-fixe">Entrée + Plat + Fromage + Dessert</span>
+                            </div>
+                            <div class="radio-custom"></div>
+                        </label>
+                        
+                        <input type="radio" id="menuB" name="choix_menu" value="Menu B" class="card-menu-input hidden">
+                        <label for="menuB" class="card-menu b">
+                            <div class="content">
+                                <span class="type-b">🌿 Menu B</span>
+                                <span id="label-menu-b" class="plat-nom"></span>
+                                <span class="formule-fixe">Entrée + Plat + Fromage + Dessert</span>
+                            </div>
+                            <div class="radio-custom"></div>
+                        </label>
+                    </div>
                     
-                    <input type="radio" id="menuB" name="choix_menu" value="Menu B" class="card-menu-input hidden">
-                    <label for="menuB" class="card-menu b">
-                        <div class="content">
-                            <span class="type-b">🌿 Menu B</span>
-                            <span id="label-menu-b" class="plat-nom"></span>
-                            <span class="formule-fixe">Entrée + Plat + Fromage + Dessert</span>
-                        </div>
-                        <div class="radio-custom"></div>
-                    </label>
-                </div>
-                
-                <div style="margin-top: 20px;">
-                    <h2>2. Où mangez-vous ?</h2>
-                    <div class="segmented">
-                        <input type="radio" id="retrait-place" name="mode_retrait" value="Sur place" class="hidden" checked>
-                        <label for="retrait-place">🍽️ Sur place</label>
-                        <input type="radio" id="retrait-emporter" name="mode_retrait" value="À emporter" class="hidden">
-                        <label for="retrait-emporter">🛍️ À emporter</label>
-                    </div>
-                </div>
-                
-                <div>
-                    <h2>3. Finaliser la réservation</h2>
-                    <div class="bloc-info">
-                        <div class="input-group">
-                            <label>Nom & Prénom</label>
-                            <input type="text" id="nom_client" required placeholder="Votre nom complet">
-                        </div>
-                        <div class="input-group">
-                            <label>Heure du retrait</label>
-                            <select id="heure_retrait">
-                                <option>12:00</option><option>12:15</option><option>12:30</option><option>12:45</option>
-                                <option>13:00</option><option>13:15</option><option>13:30</option><option>13:45</option>
-                            </select>
+                    <div style="margin-top: 20px;">
+                        <h2>2. Où mangez-vous ?</h2>
+                        <div class="segmented">
+                            <input type="radio" id="retrait-place" name="mode_retrait" value="Sur place" class="hidden" checked>
+                            <label for="retrait-place">🍽️ Sur place</label>
+                            <input type="radio" id="retrait-emporter" name="mode_retrait" value="À emporter" class="hidden">
+                            <label for="retrait-emporter">🛍️ À emporter</label>
                         </div>
                     </div>
-                </div>
-                <button type="submit" id="btn-submit" class="btn-submit">Confirmer la commande</button>
-                <div id="msg-erreur" class="msg-erreur">⚠️ Erreur de connexion. Vérifie ta connexion internet et réessaie.</div>
-            </form>
+                    
+                    <div>
+                        <h2>3. Finaliser la réservation</h2>
+                        <div class="bloc-info">
+                            <div class="input-group">
+                                <label>Nom & Prénom</label>
+                                <input type="text" id="nom_client" required placeholder="Votre nom complet">
+                            </div>
+                            <div class="input-group">
+                                <label>Heure du retrait</label>
+                                <select id="heure_retrait">
+                                    <option>12:00</option><option>12:15</option><option>12:30</option><option>12:45</option>
+                                    <option>13:00</option><option>13:15</option><option>13:30</option><option>13:45</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" id="btn-submit" class="btn-submit">Confirmer la commande</button>
+                    <div id="msg-erreur" class="msg-erreur">⚠️ Erreur de connexion.</div>
+                </form>
 
-            <!-- Écran de confirmation -->
-            <div id="ecran-confirmation" class="ecran-confirmation hidden">
-                <div class="confirmation-cercle">✅</div>
-                <div class="confirmation-titre">Réservation enregistrée !</div>
-                <p style="color:#64748b; font-size:14px; margin-bottom:4px;">À tout à l'heure au self 🍽️</p>
-                <div class="confirmation-recap" id="recap-commande"></div>
-                <button class="btn-nouvelle-resa" onclick="nouvelleReservation()">Faire une autre réservation</button>
+                <div id="ecran-confirmation" class="ecran-confirmation hidden">
+                    <div class="confirmation-cercle">✅</div>
+                    <div class="confirmation-titre">Réservation enregistrée !</div>
+                    <div class="confirmation-recap" id="recap-commande"></div>
+                    <button class="btn-nouvelle-resa" onclick="nouvelleReservation()">Faire une autre réservation</button>
+                </div>
             </div>
-            </div><!-- fin contenu-reserver -->
 
-            <!-- Contenu onglet Mes réservations -->
             <div id="contenu-reservations" class="hidden">
                 <div id="liste-reservations"></div>
             </div>
-
         </div>
     </main>
 
@@ -221,22 +201,18 @@
         let dateSelectionneeISO = "";
         let menusDuServeur = {};
 
-        // Gestion des onglets
         function afficherOnglet(onglet) {
             document.getElementById('tab-reserver').classList.toggle('actif', onglet === 'reserver');
             document.getElementById('tab-reservations').classList.toggle('actif', onglet === 'reservations');
             document.getElementById('contenu-reserver').classList.toggle('hidden', onglet !== 'reserver');
             document.getElementById('contenu-reservations').classList.toggle('hidden', onglet !== 'reservations');
-            document.getElementById('zone-alertes').classList.toggle('hidden', onglet === 'reserver');
             if (onglet === 'reservations') chargerMesReservations();
         }
 
         function formaterDate(dateStr) {
-            // Nettoyer l'apostrophe éventuelle : '2026-06-12 → 2026-06-12
             const propre = (dateStr || '').toString().replace(/'/g, '').trim();
             const JOURS_LONG = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
             const MOIS_LONG = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-            // Parser sans passer par UTC pour éviter le décalage
             const parts = propre.split('-');
             if (parts.length !== 3) return propre;
             const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
@@ -246,12 +222,7 @@
         function chargerMesReservations() {
             const nom = localStorage.getItem('nomUserSelf') || '';
             const zone = document.getElementById('liste-reservations');
-
-            if (!nom) {
-                zone.innerHTML = '<div class="resa-vide"><span>👤</span>Veuillez inscrire votre nom<br>dans le formulaire de réservation.</div>';
-                return;
-            }
-
+            if (!nom) { zone.innerHTML = '<div class="resa-vide"><span>👤</span>Veuillez inscrire votre nom.</div>'; return; }
             zone.innerHTML = '<div class="resa-vide"><span>🔄</span>Chargement...</div>';
 
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
@@ -260,172 +231,63 @@
                 const maintenant = new Date();
                 const minutesMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
                 const auj = `${maintenant.getFullYear()}-${String(maintenant.getMonth()+1).padStart(2,'0')}-${String(maintenant.getDate()).padStart(2,'0')}`;
-
-                const mesSesas = data
-                    .filter(r => r.nom && r.nom.trim().toLowerCase() === nom.toLowerCase())
+                
+                const mesSesas = data.filter(r => r.nom && r.nom.trim().toLowerCase() === nom.toLowerCase())
                     .filter(r => {
                         const datePropre = (r.date || '').toString().replace(/'/g, '').trim();
                         if (datePropre > auj) return true;
                         if (datePropre === auj) return minutesMaintenant < 14 * 60;
                         return false;
-                    })
-                    .sort((a, b) => {
-                        const da = (a.date || '').toString().replace(/'/g, '').trim();
-                        const db = (b.date || '').toString().replace(/'/g, '').trim();
-                        return da.localeCompare(db);
-                    });
+                    }).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
-                if (mesSesas.length === 0) {
-                    zone.innerHTML = '<div class="resa-vide"><span>🗓️</span>Aucune réservation trouvée<br>pour <strong>' + nom + '</strong>.</div>';
-                    document.getElementById('zone-alertes').innerHTML = '';
-                    return;
-                }
-
-                // Construire les bannières d'alerte globales
-                let alertesHTML = '';
-                mesSesas.forEach(r => {
+                if (mesSesas.length === 0) { zone.innerHTML = '<div class="resa-vide">Aucune réservation.</div>'; return; }
+                zone.innerHTML = '<h2 style="margin-bottom:12px;">Réservations de ' + nom + '</h2>' + mesSesas.map(r => {
                     const isA = r.menu && r.menu.includes('A');
-                    const datePropre = (r.date || '').toString().replace(/'/g, '').trim();
-                    const menusJour = menusDuServeur[datePropre] || {};
+                    const menusJour = menusDuServeur[(r.date || '').replace(/'/g, '').trim()] || {};
                     const aAlerte = isA ? menusJour.alerteA : menusJour.alerteB;
-                    if (aAlerte) {
-                        const autreMenu = isA ? (menusJour.B || '') : (menusJour.A || '');
-                        alertesHTML += `<div class="banniere-alerte">
-                            <div>
-                                <div class="alerte-titre">⚠️ Menu modifié le ${formaterDate(r.date)}</div>
-                                <div class="alerte-detail">Votre ${r.menu} a été modifié par la cuisine. Consultez vos réservations pour confirmer votre choix.</div>
-                            </div>
-                        </div>`;
-                    }
-                });
-                document.getElementById('zone-alertes').innerHTML = alertesHTML;
-
-                // Construire les cartes
-                zone.innerHTML = '<h2 style="margin-bottom:12px;">Réservations de ' + nom + '</h2>' +
-                    mesSesas.map(r => {
-                        const isA = r.menu && r.menu.includes('A');
-                        const badgeClass = isA ? 'badge-menu-a' : 'badge-menu-b';
-                        const badgeLabel = isA ? '🍖 Menu A' : '🌿 Menu B';
-                        const datePropre = (r.date || '').toString().replace(/'/g, '').trim();
-                        const menusJour = menusDuServeur[datePropre] || {};
-                        const platNom = isA ? (menusJour.A || '') : (menusJour.B || '');
-                        const autreNom = isA ? (menusJour.B || '') : (menusJour.A || '');
-                        const autreMenu = isA ? 'Menu B' : 'Menu A';
-                        const aAlerte = isA ? menusJour.alerteA : menusJour.alerteB;
-
-                        const platAffiche = platNom
-                            ? `<div class="resa-plat">${platNom}</div>`
-                            : `<div class="resa-plat" style="color:#94a3b8; font-style:italic;">Menu à venir</div>`;
-
-                        const alerteBadge = aAlerte
-                            ? `<div class="alerte-menu-badge">⚠️ Menu modifié par la cuisine — action requise</div>` : '';
-
-                        const actionRequise = aAlerte ? `
-                            <div class="action-requise" id="action-${datePropre}">
-                                <p>⚠️ Ce menu a changé. Que souhaitez-vous faire ?</p>
-                                <div class="action-btns">
-                                    <button class="btn-action btn-garder" onclick="garderNouveauMenu('${datePropre}')">
-                                        ✅ Garder le nouveau menu${platNom ? ' (' + platNom + ')' : ''}
-                                    </button>
-                                    <button class="btn-action btn-changer" onclick="changerPourAutreMenu('${datePropre}', '${nom}', '${autreMenu}')">
-                                        🔄 Choisir l'autre menu${autreNom ? ' (' + autreNom + ')' : ' (' + autreMenu + ')'}
-                                    </button>
-                                    <button class="btn-action btn-annuler-menu" onclick="confirmerAnnulation('${datePropre}', '${nom}')">
-                                        ❌ Annuler ma réservation
-                                    </button>
-                                </div>
-                            </div>` : '';
-
-                        return `<div class="resa-item ${aAlerte ? 'alerte-menu' : ''}" id="resa-${datePropre}">
-                            ${alerteBadge}
-                            <div class="resa-header">
-                                <div class="resa-date">${formaterDate(r.date)}</div>
-                                <span class="${badgeClass}">${badgeLabel}</span>
-                            </div>
-                            ${platAffiche}
-                            <div class="resa-detail">${r.mode}${r.heure ? ' · ' + r.heure : ''}</div>
-                            ${actionRequise}
-                            <div class="resa-footer ${aAlerte ? 'hidden' : ''}">
-                                <button class="btn-annuler" onclick="demanderAnnulation('${datePropre}', '${nom}')">🗑️ Annuler</button>
-                            </div>
-                            <div class="confirm-annul hidden" id="confirm-${datePropre}">
-                                <span>Confirmer l'annulation ?</span>
-                                <div class="confirm-btns">
-                                    <button class="btn-non" onclick="annulerConfirm('${datePropre}')">Non</button>
-                                    <button class="btn-oui" onclick="confirmerAnnulation('${datePropre}', '${nom}')">Oui, annuler</button>
-                                </div>
-                            </div>
-                        </div>`;
-                    }).join('');
-            })
-            .catch(() => {
-                zone.innerHTML = '<div class="resa-vide"><span>⚠️</span>Erreur de connexion.<br>Réessaie dans un instant.</div>';
+                    
+                    return `<div class="resa-item ${aAlerte ? 'alerte-menu' : ''}">
+                        <div class="resa-header">
+                            <div class="resa-date">${formaterDate(r.date)}</div>
+                            <span class="${isA ? 'badge-menu-a' : 'badge-menu-b'}">${isA ? '🍖 Menu A' : '🌿 Menu B'}</span>
+                        </div>
+                        <div class="resa-plat">${isA ? (menusJour.A || '') : (menusJour.B || '')}</div>
+                        <div class="resa-detail">${r.mode} · ${r.heure}</div>
+                    </div>`;
+                }).join('');
             });
         }
 
-        function garderNouveauMenu(date) {
-            // L'utilisateur accepte le nouveau menu : on masque juste le bloc action
-            document.getElementById('action-' + date).innerHTML = '<p style="color:#15803d;">✅ Choix confirmé, à bientôt au self !</p>';
-        }
-
-        function changerPourAutreMenu(date, nom, nouveauMenu) {
-            const btn = document.querySelector(`#action-${date} .btn-changer`);
-            btn.disabled = true;
-            btn.textContent = '...';
-            // Annuler l'ancienne réservation puis en créer une nouvelle avec l'autre menu
-            const menusJour = menusDuServeur[date] || {};
-            const heureSauvegardee = localStorage.getItem('heureUserSelf') || '12:00';
-            fetch(URL_SCRIPT_GOOGLE, {
-                method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ action: 'annulerInscription', nom, date })
-            }).then(() => {
-                return fetch(URL_SCRIPT_GOOGLE, {
-                    method: 'POST', mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ action: 'enregistrerCommande', nom, date, menu: nouveauMenu, mode: 'Sur place', heure: heureSauvegardee })
-                });
-            }).then(() => {
-                document.getElementById('action-' + date).innerHTML = `<p style="color:#1d4ed8;">✅ Réservation mise à jour sur le ${nouveauMenu} !</p>`;
-                // Mettre à jour le badge menu sur la carte
-                const carte = document.getElementById('resa-' + date);
-                const isNowA = nouveauMenu.includes('A');
-                carte.querySelector('.resa-header span').className = isNowA ? 'badge-menu-a' : 'badge-menu-b';
-                carte.querySelector('.resa-header span').textContent = isNowA ? '🍖 Menu A' : '🌿 Menu B';
-                const platNom = isNowA ? (menusJour.A || '') : (menusJour.B || '');
-                if (platNom) carte.querySelector('.resa-plat').textContent = platNom;
+        function verifierAlertesUtilisateur() {
+            const nom = localStorage.getItem('nomUserSelf') || '';
+            if (!nom) return;
+            fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
+            .then(res => res.json())
+            .then(data => {
+                const maintenant = new Date();
+                const minutesMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
+                const auj = `${maintenant.getFullYear()}-${String(maintenant.getMonth()+1).padStart(2,'0')}-${String(maintenant.getDate()).padStart(2,'0')}`;
+                
+                const alertes = data.filter(r => r.nom && r.nom.trim().toLowerCase() === nom.toLowerCase())
+                    .filter(r => {
+                        const dp = (r.date || '').toString().replace(/'/g, '').trim();
+                        return dp > auj || (dp === auj && minutesMaintenant < 14 * 60);
+                    })
+                    .filter(r => {
+                        const dp = (r.date || '').toString().replace(/'/g, '').trim();
+                        const menusJour = menusDuServeur[dp] || {};
+                        return r.menu.includes('A') ? menusJour.alerteA : menusJour.alerteB;
+                    });
+                
+                const zone = document.getElementById('zone-alertes');
+                zone.innerHTML = alertes.map(r => `
+                    <div class="banniere-alerte">
+                        <div class="alerte-titre">⚠️ Menu modifié le ${formaterDate(r.date)}</div>
+                        <div class="alerte-detail">Votre ${r.menu} a été modifié. <strong style="cursor:pointer;text-decoration:underline;" onclick="afficherOnglet('reservations')">Consultez "Mes réservations"</strong>.</div>
+                    </div>`).join('');
             });
         }
 
-        function demanderAnnulation(date, nom) {
-            document.getElementById('confirm-' + date).classList.remove('hidden');
-        }
-
-        function annulerConfirm(date) {
-            document.getElementById('confirm-' + date).classList.add('hidden');
-        }
-
-        function confirmerAnnulation(date, nom) {
-            const btnOui = document.querySelector(`#confirm-${date} .btn-oui`);
-            btnOui.disabled = true;
-            btnOui.textContent = '...';
-
-            fetch(URL_SCRIPT_GOOGLE, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ action: 'annulerInscription', nom: nom, date: date })
-            }).then(() => {
-                const carte = document.getElementById('resa-' + date);
-                carte.style.transition = 'opacity 0.3s';
-                carte.style.opacity = '0';
-                setTimeout(() => carte.remove(), 300);
-            }).catch(() => {
-                btnOui.disabled = false;
-                btnOui.textContent = 'Oui, annuler';
-                alert('Erreur de connexion, réessaie.');
-            });
-        }
         function chargerMenus() {
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirMenus")
             .then(res => res.json())
@@ -434,224 +296,67 @@
                 document.getElementById('zone-chargement').classList.add('hidden');
                 document.getElementById('app-contenu').classList.remove('hidden');
                 genererCalendrier();
-                verifierAlertesDemarrage();
-                verifierAlertesUtilisateur();
-            })
-            .catch(() => {
-                document.getElementById('zone-chargement').innerHTML = "❌ Impossible de charger les menus.<br><span style='font-size:12px;color:#94a3b8;'>Vérifie ta connexion et recharge la page.</span>";
+                verifierAlertesUtilisateur(); // Appel ajouté ici
             });
-        }
-
-        function verifierAlertesUtilisateur() {
-            const nom = localStorage.getItem('nomUserSelf') || '';
-            if (!nom) return;
-
-            fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
-            .then(res => res.json())
-            .then(data => {
-                const maintenant = new Date();
-                const minutesMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
-                const auj = `${maintenant.getFullYear()}-${String(maintenant.getMonth()+1).padStart(2,'0')}-${String(maintenant.getDate()).padStart(2,'0')}`;
-
-                const alertes = data
-                    .filter(r => r.nom && r.nom.trim().toLowerCase() === nom.toLowerCase())
-                    .filter(r => {
-                        const d = (r.date || '').toString().replace(/'/g, '').trim();
-                        return d > auj || (d === auj && minutesMaintenant < 14 * 60);
-                    })
-                    .filter(r => {
-                        const d = (r.date || '').toString().replace(/'/g, '').trim();
-                        const menusJour = menusDuServeur[d] || {};
-                        const isA = r.menu && r.menu.includes('A');
-                        return isA ? menusJour.alerteA : menusJour.alerteB;
-                    });
-
-                const zone = document.getElementById('zone-alertes');
-                if (alertes.length === 0) { zone.innerHTML = ''; return; }
-
-                zone.innerHTML = alertes.map(r => {
-                    const d = (r.date || '').toString().replace(/'/g, '').trim();
-                    return `<div class="banniere-alerte">
-                        <div>
-                            <div class="alerte-titre">⚠️ Menu modifié le ${formaterDate(r.date)}</div>
-                            <div class="alerte-detail">Votre ${r.menu} a été modifié par la cuisine. Consultez l'onglet <strong>Mes réservations</strong> pour confirmer votre choix.</div>
-                        </div>
-                    </div>`;
-                }).join('');
-            })
-            .catch(() => {}); // Silencieux si erreur, pas bloquant
         }
 
         function genererCalendrier() {
             const conteneur = document.getElementById('liste-jours');
             conteneur.innerHTML = "";
             const maintenant = new Date();
-            const heureActuelle = maintenant.getHours();
             let affiches = 0;
-
             for (let i = 0; i < 15; i++) {
                 if (affiches >= 5) break;
                 let d = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate() + i);
-                let jourSemaine = d.getDay();
+                if (d.getDay() === 0 || d.getDay() === 6) continue;
+                if (i === 0 && (maintenant.getHours() > 10 || (maintenant.getHours() === 10 && maintenant.getMinutes() >= 30))) continue;
                 
-                if (jourSemaine === 0 || jourSemaine === 6) continue;
-                if (i === 0 && (heureActuelle > 10 || (heureActuelle === 10 && maintenant.getMinutes() >= 30))) continue;
-
-                // Construction de la clé sans passer par UTC (évite le décalage horaire)
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                let cle = `${yyyy}-${mm}-${dd}`;
+                let cle = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 let menus = menusDuServeur[cle] || { A: "", B: "" };
-                let ouvert = (menus.A && menus.A.trim() !== "") || (menus.B && menus.B.trim() !== "");
+                if (!menus.A && !menus.B) continue;
                 
                 const btn = document.createElement('div');
-                if (!ouvert) {
-                    btn.className = 'btn-jour bloque';
-                    btn.innerHTML = '<span class="j-nom">' + JOURS_NOM[jourSemaine] + '</span><span class="j-num">' + d.getDate() + '</span><span class="j-mois">🔒 FERMÉ</span>';
-                } else {
-                    btn.className = 'btn-jour';
-                    btn.innerHTML = '<span class="j-nom">' + JOURS_NOM[jourSemaine] + '</span><span class="j-num">' + d.getDate() + '</span><span class="j-mois">' + MOIS_FR[d.getMonth()] + '</span>';
-                    btn.addEventListener('click', function() {
-                        document.querySelectorAll('.btn-jour').forEach(b => b.classList.remove('actif'));
-                        btn.classList.add('actif');
-                        dateSelectionneeISO = cle;
-                        document.getElementById('label-menu-a').textContent = menus.A || "Non renseigné";
-                        document.getElementById('label-menu-b').textContent = menus.B || "Non renseigné";
-                        document.getElementById('form-commande').classList.remove('hidden');
-                        document.getElementById('ecran-confirmation').classList.add('hidden');
-                        document.getElementById('msg-erreur').style.display = 'none';
-                    });
-                }
+                btn.className = 'btn-jour';
+                btn.innerHTML = `<span class="j-nom">${JOURS_NOM[d.getDay()]}</span><span class="j-num">${d.getDate()}</span><span class="j-mois">${MOIS_FR[d.getMonth()]}</span>`;
+                btn.onclick = function() {
+                    document.querySelectorAll('.btn-jour').forEach(b => b.classList.remove('actif'));
+                    btn.classList.add('actif');
+                    dateSelectionneeISO = cle;
+                    document.getElementById('label-menu-a').textContent = menus.A || "Non défini";
+                    document.getElementById('label-menu-b').textContent = menus.B || "Non défini";
+                    document.getElementById('form-commande').classList.remove('hidden');
+                };
                 conteneur.appendChild(btn);
                 affiches++;
             }
         }
 
-        function afficherConfirmation(donnees) {
-            const MOIS_LONG = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-            const d = new Date(donnees.date + "T12:00:00");
-            const dateFormatee = JOURS_NOM[d.getDay()] + " " + d.getDate() + " " + MOIS_LONG[d.getMonth()];
-
-            document.getElementById('recap-commande').innerHTML = `
-                <div class="recap-ligne"><span class="recap-label">📅 Date</span><span class="recap-valeur">${dateFormatee}</span></div>
-                <div class="recap-ligne"><span class="recap-label">🍽️ Menu</span><span class="recap-valeur">${donnees.menu}</span></div>
-                <div class="recap-ligne"><span class="recap-label">📍 Mode</span><span class="recap-valeur">${donnees.mode}</span></div>
-                <div class="recap-ligne"><span class="recap-label">🕐 Heure</span><span class="recap-valeur">${donnees.heure}</span></div>
-                <div class="recap-ligne"><span class="recap-label">👤 Nom</span><span class="recap-valeur">${donnees.nom}</span></div>
-            `;
-            document.getElementById('form-commande').classList.add('hidden');
-            document.getElementById('ecran-confirmation').classList.remove('hidden');
-            // Scroll vers le haut pour voir la confirmation
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function nouvelleReservation() {
-            document.getElementById('ecran-confirmation').classList.add('hidden');
-            // Réinitialiser le formulaire
-            document.getElementById('form-commande').reset();
-            document.querySelectorAll('.btn-jour').forEach(b => b.classList.remove('actif'));
-            document.getElementById('form-commande').classList.add('hidden');
-            // Restaurer le nom mémorisé
-            const nomSauvegarde = localStorage.getItem('nomUserSelf');
-            if (nomSauvegarde) document.getElementById('nom_client').value = nomSauvegarde;
-            // Restaurer l'heure mémorisée
-            const heureSauvegardee = localStorage.getItem('heureUserSelf');
-            if (heureSauvegardee) document.getElementById('heure_retrait').value = heureSauvegardee;
-        }
-
         document.getElementById('form-commande').addEventListener('submit', function(e) {
             e.preventDefault();
             const nomSaisi = document.getElementById('nom_client').value.trim();
-            const heureSaisie = document.getElementById('heure_retrait').value;
-            
-            // Mémoriser nom et heure
             localStorage.setItem('nomUserSelf', nomSaisi);
-            localStorage.setItem('heureUserSelf', heureSaisie);
-
-            const btn = document.getElementById('btn-submit');
-            const msgErreur = document.getElementById('msg-erreur');
-            btn.disabled = true;
-            btn.textContent = "Transmission...";
-            msgErreur.style.display = 'none';
-
             const donnees = {
                 action: "enregistrerCommande",
                 date: dateSelectionneeISO,
                 nom: nomSaisi,
                 menu: document.querySelector('input[name="choix_menu"]:checked').value,
                 mode: document.querySelector('input[name="mode_retrait"]:checked').value,
-                heure: heureSaisie
+                heure: document.getElementById('heure_retrait').value
             };
-
-            fetch(URL_SCRIPT_GOOGLE, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams(donnees)
-            })
+            fetch(URL_SCRIPT_GOOGLE, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(donnees) })
             .then(() => {
-                afficherConfirmation(donnees);
-                btn.disabled = false;
-                btn.textContent = "Confirmer la commande";
-            })
-            .catch(() => {
-                btn.disabled = false;
-                btn.textContent = "Confirmer la commande";
-                msgErreur.style.display = 'block';
+                document.getElementById('form-commande').classList.add('hidden');
+                document.getElementById('ecran-confirmation').classList.remove('hidden');
+                document.getElementById('recap-commande').innerHTML = `...`;
             });
         });
 
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', () => {
             chargerMenus();
-            const nomSauvegarde = localStorage.getItem('nomUserSelf');
-            if (nomSauvegarde) document.getElementById('nom_client').value = nomSauvegarde;
-            const heureSauvegardee = localStorage.getItem('heureUserSelf');
-            if (heureSauvegardee) document.getElementById('heure_retrait').value = heureSauvegardee;
+            if (localStorage.getItem('nomUserSelf')) document.getElementById('nom_client').value = localStorage.getItem('nomUserSelf');
         });
 
-        // Appelée après chargerMenus() une fois menusDuServeur rempli
-        function verifierAlertesDemarrage() {
-            const nom = localStorage.getItem('nomUserSelf');
-            if (!nom) return;
-
-            fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
-            .then(res => res.json())
-            .then(data => {
-                const maintenant = new Date();
-                const auj = `${maintenant.getFullYear()}-${String(maintenant.getMonth()+1).padStart(2,'0')}-${String(maintenant.getDate()).padStart(2,'0')}`;
-                const minutesMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
-
-                const alertes = data
-                    .filter(r => r.nom && r.nom.trim().toLowerCase() === nom.toLowerCase())
-                    .filter(r => {
-                        const dp = (r.date || '').toString().replace(/'/g, '').trim();
-                        return dp > auj || (dp === auj && minutesMaintenant < 14 * 60);
-                    })
-                    .filter(r => {
-                        const dp = (r.date || '').toString().replace(/'/g, '').trim();
-                        const isA = r.menu && r.menu.includes('A');
-                        const menusJour = menusDuServeur[dp] || {};
-                        return isA ? menusJour.alerteA : menusJour.alerteB;
-                    });
-
-                if (alertes.length === 0) return;
-
-                const html = alertes.map(r => `
-                    <div class="banniere-alerte">
-                        <div>
-                            <div class="alerte-titre">⚠️ Menu modifié le ${formaterDate(r.date)}</div>
-                            <div class="alerte-detail">Votre ${r.menu} a été modifié par la cuisine. <strong style="cursor:pointer;text-decoration:underline;" onclick="afficherOnglet('reservations')">Consultez vos réservations</strong> pour confirmer votre choix.</div>
-                        </div>
-                    </div>`).join('');
-
-                document.getElementById('zone-alertes').innerHTML = html;
-                // Visible seulement si on est sur l'onglet "Mes réservations"
-                const surReservations = document.getElementById('tab-reservations').classList.contains('actif');
-                document.getElementById('zone-alertes').classList.toggle('hidden', !surReservations);
-            })
-            .catch(() => {}); // Silencieux au démarrage
-        }
+        function nouvelleReservation() { location.reload(); }
     </script>
 </body>
 </html>
