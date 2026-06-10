@@ -232,7 +232,25 @@
             fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
             .then(res => res.json())
             .then(data => {
-                const mesSesas = data.filter(r => r.nom && r.nom.trim().toLowerCase() === nom.toLowerCase());
+                const maintenant = new Date();
+                const heure = maintenant.getHours();
+                const minutesMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
+                // Clé du jour courant au format YYYY-MM-DD local
+                const auj = `${maintenant.getFullYear()}-${String(maintenant.getMonth()+1).padStart(2,'0')}-${String(maintenant.getDate()).padStart(2,'0')}`;
+
+                const mesSesas = data
+                        .filter(r => r.nom && r.nom.trim().toLowerCase() === nom.toLowerCase())
+                        .filter(r => {
+                            const datePropre = (r.date || '').toString().replace(/'/g, '').trim();
+                            if (datePropre > auj) return true;           // jours futurs : toujours affichés
+                            if (datePropre === auj) return minutesMaintenant < 14 * 60; // aujourd'hui : jusqu'à 14h00
+                            return false;                                 // jours passés : masqués
+                        })
+                        .sort((a, b) => {
+                            const da = (a.date || '').toString().replace(/'/g, '').trim();
+                            const db = (b.date || '').toString().replace(/'/g, '').trim();
+                            return da.localeCompare(db);
+                        });
                 if (mesSesas.length === 0) {
                     zone.innerHTML = '<div class="resa-vide"><span>🗓️</span>Aucune réservation trouvée<br>pour <strong>' + nom + '</strong>.</div>';
                 } else {
@@ -245,13 +263,15 @@
                             const datePropre = (r.date || '').toString().replace(/'/g, '').trim();
                             const menusJour = menusDuServeur[datePropre] || {};
                             const platNom = isA ? (menusJour.A || '') : (menusJour.B || '');
-                            return `
-                            <div class="resa-item">
+                            const platAffiche = platNom
+                                ? `<div class="resa-plat">${platNom}</div>`
+                                : `<div class="resa-plat" style="color:#94a3b8; font-style:italic;">Menu à venir</div>`;
+                            return `<div class="resa-item">
                                 <div class="resa-header">
                                     <div class="resa-date">${formaterDate(r.date)}</div>
                                     <span class="${badgeClass}">${badgeLabel}</span>
                                 </div>
-                                ${platNom ? `<div class="resa-plat">${platNom}</div>` : ''}
+                                ${platAffiche}
                                 <div class="resa-detail">${r.mode}${r.heure ? ' · ' + r.heure : ''}</div>
                             </div>`;
                         }).join('');
