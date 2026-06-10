@@ -22,10 +22,11 @@
         .input-group label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .input-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
         .input-group input.modifie { border-color: #f97316; background: #fff7ed; }
-        .alerte-modif { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 8px 10px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; }
-        .alerte-modif input[type=checkbox] { width: 16px; height: 16px; accent-color: #f97316; cursor: pointer; flex-shrink: 0; }
-        .alerte-modif label { font-size: 12px; font-weight: 700; color: #c2410c; cursor: pointer; }
-        .badge-modif { font-size: 10px; font-weight: 800; background: #f97316; color: white; padding: 2px 7px; border-radius: 5px; margin-left: auto; }
+        .input-row { display: flex; align-items: center; gap: 8px; }
+        .input-row input[type=text] { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+        .input-row input[type=text].modifie { border-color: #f97316; background: #fff7ed; }
+        .btn-alerte { background: none; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 15px; color: #cbd5e1; transition: all 0.15s; flex-shrink: 0; line-height: 1; }
+        .btn-alerte.actif { border-color: #f97316; color: #f97316; background: #fff7ed; }
         .btn-sauvegarder { width: 100%; background: #0f172a; color: white; border: none; font-size: 14px; font-weight: 700; text-transform: uppercase; padding: 16px; border-radius: 12px; cursor: pointer; margin-top: 10px; }
         .date-semaine-titre { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 15px; text-align: center; background: #e0f2fe; padding: 8px; border-radius: 8px; }
         
@@ -175,20 +176,16 @@
                 bloc.innerHTML = `<div class="jour-header"><div class="jour-titre" data-date="${isoClé}">📅 ${dateJour.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
                     <div class="input-group">
                         <label>🍖 Menu A</label>
-                        <input type="text" id="a-${isoClé}" value="${menuJour.A || ''}" class="${menuJour.alerteA ? 'modifie' : ''}">
-                        <div class="alerte-modif">
-                            <input type="checkbox" id="alerteA-${isoClé}" ${menuJour.alerteA ? 'checked' : ''} onchange="toggleAlerte(this, 'a-${isoClé}')">
-                            <label for="alerteA-${isoClé}">⚠️ Menu A modifié — alerter les convives</label>
-                            ${menuJour.alerteA ? '<span class="badge-modif">ALERTE ACTIVE</span>' : ''}
+                        <div class="input-row">
+                            <input type="text" id="a-${isoClé}" value="${menuJour.A || ''}" class="${menuJour.alerteA ? 'modifie' : ''}">
+                            <button type="button" class="btn-alerte ${menuJour.alerteA ? 'actif' : ''}" id="alerteA-${isoClé}" title="Signaler un changement de menu" onclick="toggleAlerte('alerteA-${isoClé}', 'a-${isoClé}')">⚠️</button>
                         </div>
                     </div>
                     <div class="input-group">
                         <label>🌿 Menu B</label>
-                        <input type="text" id="b-${isoClé}" value="${menuJour.B || ''}" class="${menuJour.alerteB ? 'modifie' : ''}">
-                        <div class="alerte-modif">
-                            <input type="checkbox" id="alerteB-${isoClé}" ${menuJour.alerteB ? 'checked' : ''} onchange="toggleAlerte(this, 'b-${isoClé}')">
-                            <label for="alerteB-${isoClé}">⚠️ Menu B modifié — alerter les convives</label>
-                            ${menuJour.alerteB ? '<span class="badge-modif">ALERTE ACTIVE</span>' : ''}
+                        <div class="input-row">
+                            <input type="text" id="b-${isoClé}" value="${menuJour.B || ''}" class="${menuJour.alerteB ? 'modifie' : ''}">
+                            <button type="button" class="btn-alerte ${menuJour.alerteB ? 'actif' : ''}" id="alerteB-${isoClé}" title="Signaler un changement de menu" onclick="toggleAlerte('alerteB-${isoClé}', 'b-${isoClé}')">⚠️</button>
                         </div>
                     </div>`;
                 conteneur.appendChild(bloc);
@@ -262,18 +259,11 @@
             chargerInscriptionsDuJour();
         };
 
-        function toggleAlerte(checkbox, inputId) {
-            document.getElementById(inputId).classList.toggle('modifie', checkbox.checked);
-            // Rafraîchir le badge
-            const badge = checkbox.closest('.alerte-modif').querySelector('.badge-modif');
-            if (checkbox.checked && !badge) {
-                const b = document.createElement('span');
-                b.className = 'badge-modif';
-                b.textContent = 'ALERTE ACTIVE';
-                checkbox.closest('.alerte-modif').appendChild(b);
-            } else if (!checkbox.checked && badge) {
-                badge.remove();
-            }
+        function toggleAlerte(btnId, inputId) {
+            const btn = document.getElementById(btnId);
+            const input = document.getElementById(inputId);
+            const actif = btn.classList.toggle('actif');
+            input.classList.toggle('modifie', actif);
         }
 
         document.getElementById('form-admin').addEventListener('submit', function(e) {
@@ -281,8 +271,8 @@
             let paquetsMenus = [];
             document.querySelectorAll('.jour-bloc').forEach(bloc => {
                 let d = bloc.querySelector('.jour-titre').getAttribute('data-date');
-                const alerteA = bloc.querySelector(`#alerteA-${d}`)?.checked || false;
-                const alerteB = bloc.querySelector(`#alerteB-${d}`)?.checked || false;
+                const alerteA = bloc.querySelector(`#alerteA-${d}`)?.classList.contains('actif') || false;
+                const alerteB = bloc.querySelector(`#alerteB-${d}`)?.classList.contains('actif') || false;
                 paquetsMenus.push({
                     date: d,
                     menuA: bloc.querySelector(`input[id="a-${d}"]`).value,
