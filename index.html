@@ -214,14 +214,16 @@
 
             zone.innerHTML = '<div class="resa-vide"><span>🔄</span>Chargement...</div>';
 
-            fetch(URL_SCRIPT_GOOGLE + "?action=vérifierInscription&nom=" + encodeURIComponent(nom))
+            fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
             .then(res => res.json())
             .then(data => {
-                if (data.length === 0) {
+                // Filtrer par nom (insensible à la casse)
+                const mesSesas = data.filter(r => r.nom && r.nom.trim().toLowerCase() === nom.toLowerCase());
+                if (mesSesas.length === 0) {
                     zone.innerHTML = '<div class="resa-vide"><span>🗓️</span>Aucune réservation trouvée<br>pour <strong>' + nom + '</strong>.</div>';
                 } else {
                     zone.innerHTML = '<h2 style="margin-bottom:12px;">Réservations de ' + nom + '</h2>' +
-                        data.map(r => `
+                        mesSesas.map(r => `
                             <div class="resa-item">
                                 <div class="resa-date">📅 ${r.date}</div>
                                 <div class="resa-menu">${r.menu}</div>
