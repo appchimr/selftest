@@ -75,6 +75,19 @@
 
         /* Message d'erreur */
         .msg-erreur { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 14px; padding: 14px 16px; font-size: 13px; font-weight: 600; margin-top: 12px; display: none; }
+
+        /* Onglets */
+        .tabs { display: flex; background: #e2e8f0; padding: 3px; border-radius: 14px; margin-bottom: 20px; }
+        .tabs button { flex: 1; background: none; border: none; padding: 10px; font-size: 13px; font-weight: 700; color: #64748b; border-radius: 11px; cursor: pointer; }
+        .tabs button.actif { background: white; color: #0f172a; }
+
+        /* Mes réservations */
+        .resa-item { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+        .resa-item .resa-date { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        .resa-item .resa-menu { font-size: 15px; font-weight: 700; color: #0f172a; }
+        .resa-item .resa-detail { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .resa-vide { text-align: center; padding: 30px 16px; color: #94a3b8; font-size: 14px; font-weight: 600; }
+        .resa-vide span { display: block; font-size: 32px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -87,18 +100,21 @@
         <div id="zone-chargement" class="chargement">🔄 Récupération des menus en cours...</div>
         
         <div id="app-contenu" class="hidden">
-            <div class="verif-box">
-                <h2 style="margin-bottom:8px;">🔍 Vérifier mes inscriptions</h2>
-                <button type="button" class="btn-verif" onclick="verifierMesReservations()">Voir mes réservations</button>
-                <div id="resultat-recherche" style="margin-top: 10px; font-size: 13px; color: #334155;"></div>
+
+            <!-- Onglets -->
+            <div class="tabs">
+                <button id="tab-reserver" class="actif" onclick="afficherOnglet('reserver')">🍴 Réserver</button>
+                <button id="tab-reservations" onclick="afficherOnglet('reservations')">📅 Mes réservations</button>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <h2>📅 Prochains jours disponibles</h2>
-                <div id="liste-jours" class="grid-jours"></div>
-            </div>
-            
-            <form id="form-commande" class="hidden space-form">
+            <!-- Contenu onglet Réserver -->
+            <div id="contenu-reserver">
+                <div style="margin-bottom: 20px;">
+                    <h2>📅 Prochains jours disponibles</h2>
+                    <div id="liste-jours" class="grid-jours"></div>
+                </div>
+                
+                <form id="form-commande" class="hidden space-form">
                 <div>
                     <h2>1. Sélectionnez votre assiette</h2>
                     <input type="radio" id="menuA" name="choix_menu" value="Menu A" class="card-menu-input hidden" required>
@@ -160,6 +176,13 @@
                 <div class="confirmation-recap" id="recap-commande"></div>
                 <button class="btn-nouvelle-resa" onclick="nouvelleReservation()">Faire une autre réservation</button>
             </div>
+            </div><!-- fin contenu-reserver -->
+
+            <!-- Contenu onglet Mes réservations -->
+            <div id="contenu-reservations" class="hidden">
+                <div id="liste-reservations"></div>
+            </div>
+
         </div>
     </main>
 
@@ -170,29 +193,45 @@
         let dateSelectionneeISO = "";
         let menusDuServeur = {};
 
-        // Vérification des réservations
-        function verifierMesReservations() {
-            const nomSaisi = document.getElementById('nom_client').value.trim();
-            if (!nomSaisi) { alert("Veuillez saisir votre nom dans le formulaire en bas d'abord."); return; }
-            
-            const zoneResultat = document.getElementById('resultat-recherche');
-            zoneResultat.innerHTML = "Recherche...";
+        // Gestion des onglets
+        function afficherOnglet(onglet) {
+            document.getElementById('tab-reserver').classList.toggle('actif', onglet === 'reserver');
+            document.getElementById('tab-reservations').classList.toggle('actif', onglet === 'reservations');
+            document.getElementById('contenu-reserver').classList.toggle('hidden', onglet !== 'reserver');
+            document.getElementById('contenu-reservations').classList.toggle('hidden', onglet !== 'reservations');
+            if (onglet === 'reservations') chargerMesReservations();
+        }
 
-            fetch(URL_SCRIPT_GOOGLE + "?action=vérifierInscription&nom=" + encodeURIComponent(nomSaisi))
+        function chargerMesReservations() {
+            const nom = localStorage.getItem('nomUserSelf') || '';
+            const zone = document.getElementById('liste-reservations');
+
+            if (!nom) {
+                zone.innerHTML = '<div class="resa-vide"><span>👤</span>Veuillez inscrire votre nom<br>dans le formulaire de réservation.</div>';
+                return;
+            }
+
+            zone.innerHTML = '<div class="resa-vide"><span>🔄</span>Chargement...</div>';
+
+            fetch(URL_SCRIPT_GOOGLE + "?action=vérifierInscription&nom=" + encodeURIComponent(nom))
             .then(res => res.json())
             .then(data => {
                 if (data.length === 0) {
-                    zoneResultat.innerHTML = "❌ Aucune réservation trouvée pour <strong>" + nomSaisi + "</strong>.";
+                    zone.innerHTML = '<div class="resa-vide"><span>🗓️</span>Aucune réservation trouvée<br>pour <strong>' + nom + '</strong>.</div>';
                 } else {
-                    let html = "<strong>Vos inscriptions :</strong><ul style='margin-left:20px; margin-top:5px;'>";
-                    data.forEach(r => {
-                        html += `<li>${r.date} : ${r.menu} (${r.mode})</li>`;
-                    });
-                    html += "</ul>";
-                    zoneResultat.innerHTML = html;
+                    zone.innerHTML = '<h2 style="margin-bottom:12px;">Réservations de ' + nom + '</h2>' +
+                        data.map(r => `
+                            <div class="resa-item">
+                                <div class="resa-date">📅 ${r.date}</div>
+                                <div class="resa-menu">${r.menu}</div>
+                                <div class="resa-detail">${r.mode}${r.heure ? ' · ' + r.heure : ''}</div>
+                            </div>
+                        `).join('');
                 }
             })
-            .catch(() => zoneResultat.innerHTML = "❌ Erreur de connexion.");
+            .catch(() => {
+                zone.innerHTML = '<div class="resa-vide"><span>⚠️</span>Erreur de connexion.<br>Réessaie dans un instant.</div>';
+            });
         }
 
         function chargerMenus() {
