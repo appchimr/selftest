@@ -21,6 +21,11 @@
         .input-group { margin-bottom: 10px; }
         .input-group label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .input-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+        .input-group input.modifie { border-color: #f97316; background: #fff7ed; }
+        .alerte-modif { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 8px 10px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; }
+        .alerte-modif input[type=checkbox] { width: 16px; height: 16px; accent-color: #f97316; cursor: pointer; flex-shrink: 0; }
+        .alerte-modif label { font-size: 12px; font-weight: 700; color: #c2410c; cursor: pointer; }
+        .badge-modif { font-size: 10px; font-weight: 800; background: #f97316; color: white; padding: 2px 7px; border-radius: 5px; margin-left: auto; }
         .btn-sauvegarder { width: 100%; background: #0f172a; color: white; border: none; font-size: 14px; font-weight: 700; text-transform: uppercase; padding: 16px; border-radius: 12px; cursor: pointer; margin-top: 10px; }
         .date-semaine-titre { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 15px; text-align: center; background: #e0f2fe; padding: 8px; border-radius: 8px; }
         
@@ -163,13 +168,29 @@
             for (let i = 0; i < 5; i++) {
                 let dateJour = new Date(baseLundi.getFullYear(), baseLundi.getMonth(), baseLundi.getDate() + i, 12, 0, 0);
                 let isoClé = `${dateJour.getFullYear()}-${(dateJour.getMonth() + 1).toString().padStart(2, '0')}-${dateJour.getDate().toString().padStart(2, '0')}`;
-                let menuJour = menusServeurComplets[isoClé] || { A: "", B: "" };
+                let menuJour = menusServeurComplets[isoClé] || { A: "", B: "", alerteA: false, alerteB: false };
                 
                 const bloc = document.createElement('div');
                 bloc.className = 'jour-bloc';
                 bloc.innerHTML = `<div class="jour-header"><div class="jour-titre" data-date="${isoClé}">📅 ${dateJour.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
-                    <div class="input-group"><label>🍖 Menu A</label><input type="text" id="a-${isoClé}" value="${menuJour.A || ''}"></div>
-                    <div class="input-group"><label>🌿 Menu B</label><input type="text" id="b-${isoClé}" value="${menuJour.B || ''}"></div>`;
+                    <div class="input-group">
+                        <label>🍖 Menu A</label>
+                        <input type="text" id="a-${isoClé}" value="${menuJour.A || ''}" class="${menuJour.alerteA ? 'modifie' : ''}">
+                        <div class="alerte-modif">
+                            <input type="checkbox" id="alerteA-${isoClé}" ${menuJour.alerteA ? 'checked' : ''} onchange="toggleAlerte(this, 'a-${isoClé}')">
+                            <label for="alerteA-${isoClé}">⚠️ Menu A modifié — alerter les convives</label>
+                            ${menuJour.alerteA ? '<span class="badge-modif">ALERTE ACTIVE</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>🌿 Menu B</label>
+                        <input type="text" id="b-${isoClé}" value="${menuJour.B || ''}" class="${menuJour.alerteB ? 'modifie' : ''}">
+                        <div class="alerte-modif">
+                            <input type="checkbox" id="alerteB-${isoClé}" ${menuJour.alerteB ? 'checked' : ''} onchange="toggleAlerte(this, 'b-${isoClé}')">
+                            <label for="alerteB-${isoClé}">⚠️ Menu B modifié — alerter les convives</label>
+                            ${menuJour.alerteB ? '<span class="badge-modif">ALERTE ACTIVE</span>' : ''}
+                        </div>
+                    </div>`;
                 conteneur.appendChild(bloc);
             }
         }
@@ -241,12 +262,34 @@
             chargerInscriptionsDuJour();
         };
 
+        function toggleAlerte(checkbox, inputId) {
+            document.getElementById(inputId).classList.toggle('modifie', checkbox.checked);
+            // Rafraîchir le badge
+            const badge = checkbox.closest('.alerte-modif').querySelector('.badge-modif');
+            if (checkbox.checked && !badge) {
+                const b = document.createElement('span');
+                b.className = 'badge-modif';
+                b.textContent = 'ALERTE ACTIVE';
+                checkbox.closest('.alerte-modif').appendChild(b);
+            } else if (!checkbox.checked && badge) {
+                badge.remove();
+            }
+        }
+
         document.getElementById('form-admin').addEventListener('submit', function(e) {
             e.preventDefault();
             let paquetsMenus = [];
             document.querySelectorAll('.jour-bloc').forEach(bloc => {
                 let d = bloc.querySelector('.jour-titre').getAttribute('data-date');
-                paquetsMenus.push({ date: d, menuA: bloc.querySelector(`input[id="a-${d}"]`).value, menuB: bloc.querySelector(`input[id="b-${d}"]`).value });
+                const alerteA = bloc.querySelector(`#alerteA-${d}`)?.checked || false;
+                const alerteB = bloc.querySelector(`#alerteB-${d}`)?.checked || false;
+                paquetsMenus.push({
+                    date: d,
+                    menuA: bloc.querySelector(`input[id="a-${d}"]`).value,
+                    menuB: bloc.querySelector(`input[id="b-${d}"]`).value,
+                    alerteA: alerteA,
+                    alerteB: alerteB
+                });
             });
             fetch(URL_SCRIPT_GOOGLE, { method: "POST", mode: "no-cors", body: new URLSearchParams({ action: "enregistrerMenus", donnees: JSON.stringify(paquetsMenus) }) }).then(() => alert("🎉 Publié !"));
         });
