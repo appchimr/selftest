@@ -9,6 +9,20 @@
         body { background-color: #f8fafc; color: #0f172a; padding-bottom: 40px; }
         header { background: white; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
         .logo-title { font-size: 20px; font-weight: 800; color: #0f172a; }
+        .btn-admin { background: none; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 12px; font-size: 11px; font-weight: 700; color: #94a3b8; cursor: pointer; }
+        .btn-admin:hover { border-color: #cbd5e1; color: #64748b; }
+
+        /* Modale mot de passe */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: white; border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 340px; }
+        .modal-titre { font-size: 17px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+        .modal-sous-titre { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+        .modal-box input[type=password] { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 15px; outline: none; margin-bottom: 10px; }
+        .modal-box input[type=password].erreur { border-color: #ef4444; background: #fef2f2; }
+        .modal-msg-erreur { font-size: 12px; color: #ef4444; font-weight: 600; margin-bottom: 10px; display: none; }
+        .modal-btns { display: flex; gap: 8px; }
+        .modal-btns .btn-annuler-modal { flex: 1; background: #f1f5f9; border: none; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 700; color: #64748b; cursor: pointer; }
+        .modal-btns .btn-valider-modal { flex: 1; background: #0f172a; border: none; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 700; color: white; cursor: pointer; }
         main { max-width: 450px; margin: 0 auto; padding: 16px; }
         h2 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 12px; padding-left: 4px; }
         
@@ -118,7 +132,22 @@
 
     <header>
         <div><h1 class="logo-title">Self CHIMR</h1></div>
+        <button class="btn-admin" onclick="ouvrirModalAdmin()">⚙️ Admin</button>
     </header>
+
+    <!-- Modale mot de passe admin -->
+    <div id="modal-admin" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-titre">🔒 Accès administration</div>
+            <div class="modal-sous-titre">Entrez le mot de passe pour accéder à la cuisine.</div>
+            <input type="password" id="input-mdp" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') validerMdp()">
+            <div id="modal-erreur" class="modal-msg-erreur">Mot de passe incorrect.</div>
+            <div class="modal-btns">
+                <button class="btn-annuler-modal" onclick="fermerModalAdmin()">Annuler</button>
+                <button class="btn-valider-modal" onclick="validerMdp()">Accéder</button>
+            </div>
+        </div>
+    </div>
 
     <main>
         <div id="zone-chargement" class="chargement">🔄 Récupération des menus en cours...</div>
@@ -216,6 +245,32 @@
 
     <script>
         const URL_SCRIPT_GOOGLE = "https://script.google.com/macros/s/AKfycbzcCFLxV_IxqN6zToLlGcCysRZKlbZWFYv2vla3vx8nSV2-BTzdubh9GLmIJ9XMVhjD/exec";
+        const MOT_DE_PASSE_ADMIN = "cuisine2024"; // ← change ce mot de passe
+
+        function ouvrirModalAdmin() {
+            document.getElementById('modal-admin').classList.remove('hidden');
+            document.getElementById('input-mdp').value = '';
+            document.getElementById('modal-erreur').style.display = 'none';
+            document.getElementById('input-mdp').classList.remove('erreur');
+            setTimeout(() => document.getElementById('input-mdp').focus(), 100);
+        }
+
+        function fermerModalAdmin() {
+            document.getElementById('modal-admin').classList.add('hidden');
+        }
+
+        function validerMdp() {
+            const mdp = document.getElementById('input-mdp').value;
+            if (mdp === MOT_DE_PASSE_ADMIN) {
+                fermerModalAdmin();
+                window.location.href = 'admin.html';
+            } else {
+                document.getElementById('input-mdp').classList.add('erreur');
+                document.getElementById('modal-erreur').style.display = 'block';
+                document.getElementById('input-mdp').value = '';
+                document.getElementById('input-mdp').focus();
+            }
+        }
         const JOURS_NOM = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
         const MOIS_FR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
         let dateSelectionneeISO = "";
