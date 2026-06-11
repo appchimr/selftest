@@ -276,7 +276,6 @@
 
                 if (mesSesas.length === 0) {
                     zone.innerHTML = '<div class="resa-vide"><span>🗓️</span>Aucune réservation trouvée<br>pour <strong>' + nom + '</strong>.</div>';
-                    document.getElementById('zone-alertes').innerHTML = '';
                     return;
                 }
 
@@ -297,7 +296,7 @@
                         </div>`;
                     }
                 });
-                document.getElementById('zone-alertes').innerHTML = alertesHTML;
+                // Ne pas toucher à zone-alertes ici, géré par verifierAlertesDemarrage
 
                 // Construire les cartes
                 zone.innerHTML = '<h2 style="margin-bottom:12px;">Réservations de ' + nom + '</h2>' +
@@ -640,7 +639,7 @@
                     <div class="banniere-alerte">
                         <div>
                             <div class="alerte-titre">⚠️ Menu modifié le ${formaterDate(r.date)}</div>
-                            <div class="alerte-detail">Votre ${r.menu} a été modifié par la cuisine. <strong style="cursor:pointer;text-decoration:underline;" onclick="afficherOnglet('reservations')">Consultez vos réservations</strong> pour confirmer votre choix.</div>
+                            <div class="alerte-detail">Votre ${r.menu} a été modifié par la cuisine. <a href="#" style="color:#c2410c; font-weight:800;" onclick="event.preventDefault(); afficherOnglet('reservations')">Mes réservations →</a></div>
                         </div>
                     </div>`).join('');
 
