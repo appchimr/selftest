@@ -286,15 +286,6 @@
                     const datePropre = (r.date || '').toString().replace(/'/g, '').trim();
                     const menusJour = menusDuServeur[datePropre] || {};
                     const aAlerte = isA ? menusJour.alerteA : menusJour.alerteB;
-                    if (aAlerte) {
-                        const autreMenu = isA ? (menusJour.B || '') : (menusJour.A || '');
-                        alertesHTML += `<div class="banniere-alerte">
-                            <div>
-                                <div class="alerte-titre">⚠️ Menu modifié le ${formaterDate(r.date)}</div>
-                                <div class="alerte-detail">Votre ${r.menu} a été modifié par la cuisine. Consultez vos réservations pour confirmer votre choix.</div>
-                            </div>
-                        </div>`;
-                    }
                 });
                 // Ne pas toucher à zone-alertes ici, géré par verifierAlertesDemarrage
 
@@ -472,7 +463,7 @@
                     return `<div class="banniere-alerte">
                         <div>
                             <div class="alerte-titre">⚠️ Menu modifié le ${formaterDate(r.date)}</div>
-                            <div class="alerte-detail">Votre ${r.menu} a été modifié par la cuisine. Consultez l'onglet <strong>Mes réservations</strong> pour confirmer votre choix.</div>
+                            <div class="alerte-detail">Votre ${r.menu} a été modifié par la cuisine. <a href="#" style="color:#c2410c; font-weight:800;" onclick="event.preventDefault(); afficherOnglet('reservations')">Mes réservations →</a></div>
                         </div>
                     </div>`;
                 }).join('');
