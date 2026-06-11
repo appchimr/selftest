@@ -380,6 +380,9 @@
                                 </div>
                             </div>` : '';
 
+                        // Annulation possible jusqu'à 10h30 le jour même
+                        const peutAnnuler = datePropre > auj || (datePropre === auj && minutesMaintenant < 10 * 60 + 30);
+
                         return `<div class="resa-item ${aAlerte ? 'alerte-menu' : ''}" id="resa-${datePropre}">
                             ${alerteBadge}
                             <div class="resa-header">
@@ -389,7 +392,8 @@
                             ${platAffiche}
                             <div class="resa-detail">${r.mode}${r.heure ? ' · ' + r.heure : ''}</div>
                             ${actionRequise}
-                            <div class="resa-footer ${aAlerte ? 'hidden' : ''}">
+                            ${peutAnnuler && !aAlerte ? `
+                            <div class="resa-footer">
                                 <button class="btn-annuler" onclick="demanderAnnulation('${datePropre}', '${nom}')">🗑️ Annuler</button>
                             </div>
                             <div class="confirm-annul hidden" id="confirm-${datePropre}">
@@ -398,7 +402,7 @@
                                     <button class="btn-non" onclick="annulerConfirm('${datePropre}')">Non</button>
                                     <button class="btn-oui" onclick="confirmerAnnulation('${datePropre}', '${nom}')">Oui, annuler</button>
                                 </div>
-                            </div>
+                            </div>` : ''}
                         </div>`;
                     }).join('');
             })
