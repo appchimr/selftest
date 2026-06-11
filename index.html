@@ -227,7 +227,6 @@
             document.getElementById('tab-reservations').classList.toggle('actif', onglet === 'reservations');
             document.getElementById('contenu-reserver').classList.toggle('hidden', onglet !== 'reserver');
             document.getElementById('contenu-reservations').classList.toggle('hidden', onglet !== 'reservations');
-            document.getElementById('zone-alertes').classList.toggle('hidden', onglet === 'reserver');
             if (onglet === 'reservations') chargerMesReservations();
         }
 
@@ -646,9 +645,6 @@
                     </div>`).join('');
 
                 document.getElementById('zone-alertes').innerHTML = html;
-                // Visible seulement si on est sur l'onglet "Mes réservations"
-                const surReservations = document.getElementById('tab-reservations').classList.contains('actif');
-                document.getElementById('zone-alertes').classList.toggle('hidden', !surReservations);
             })
             .catch(() => {}); // Silencieux au démarrage
         }
