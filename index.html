@@ -597,6 +597,19 @@
             if (nomSauvegarde) document.getElementById('nom_client').value = nomSauvegarde;
             const heureSauvegardee = localStorage.getItem('heureUserSelf');
             if (heureSauvegardee) document.getElementById('heure_retrait').value = heureSauvegardee;
+
+            // Sauvegarder le nom dès la saisie (sans attendre la réservation)
+            document.getElementById('nom_client').addEventListener('input', function() {
+                const val = this.value.trim();
+                if (val.length > 2) {
+                    localStorage.setItem('nomUserSelf', val);
+                    // Rafraîchir les alertes et les réservations si l'onglet est actif
+                    verifierAlertesDemarrage();
+                    if (document.getElementById('tab-reservations').classList.contains('actif')) {
+                        chargerMesReservations();
+                    }
+                }
+            });
         });
 
         // Appelée après chargerMenus() une fois menusDuServeur rempli
