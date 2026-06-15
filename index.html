@@ -213,10 +213,10 @@
 <!-- Modale changement de profil -->
 <div class="modale-overlay hidden" id="modale-overlay" onclick="fermerModale(event)">
     <div class="modale-profil" onclick="event.stopPropagation()">
-        <div class="modale-titre">👤 Votre profil</div>
+        <div class="modale-titre" id="modale-titre">👤 Votre profil</div>
         <input type="text" id="modale-nom-input" class="modale-input" placeholder="Nom & Prénom" autocomplete="name" onkeydown="if(event.key==='Enter') enregistrerProfil()">
         <button class="modale-btn" onclick="enregistrerProfil()">Utiliser ce profil</button>
-        <div class="modale-sub">Votre nom est mémorisé sur cet appareil uniquement.</div>
+        <div class="modale-sub" id="modale-sub">Votre nom est mémorisé sur cet appareil uniquement.</div>
     </div>
 </div>
 
@@ -690,10 +690,20 @@ function confirmerAnnulation(date, nom) {
 function ouvrirModale() {
     const nom = localStorage.getItem('nomUserSelf') || '';
     document.getElementById('modale-nom-input').value = nom;
+    // Adapter le wording selon première visite ou changement
+    if (!nom) {
+        document.getElementById('modale-titre').textContent = '👋 Bienvenue !';
+        document.getElementById('modale-sub').textContent = 'Indiquez votre nom pour commencer à réserver.';
+    } else {
+        document.getElementById('modale-titre').textContent = '👤 Votre profil';
+        document.getElementById('modale-sub').textContent = 'Votre nom est mémorisé sur cet appareil uniquement.';
+    }
     document.getElementById('modale-overlay').classList.remove('hidden');
     setTimeout(() => document.getElementById('modale-nom-input').focus(), 50);
 }
 function fermerModale(e) {
+    // Si pas encore de profil enregistré, on empêche la fermeture sans saisie
+    if (!localStorage.getItem('nomUserSelf')) return;
     if (!e || e.target === document.getElementById('modale-overlay')) {
         document.getElementById('modale-overlay').classList.add('hidden');
     }
@@ -724,6 +734,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (nomSave) {
         document.getElementById('nom_client').value = nomSave;
         mettreAJourGreeting(nomSave);
+    } else {
+        // Première visite : ouvrir la modale automatiquement
+        ouvrirModale();
     }
     if (heureSave) document.getElementById('heure_retrait').value = heureSave;
 
