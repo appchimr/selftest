@@ -50,7 +50,21 @@
         .logo-icon { width: 34px; height: 34px; background: var(--navy); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
         .logo-text { font-size: 17px; font-weight: 800; color: var(--navy); }
         .logo-sub { font-size: 11px; color: var(--slate); font-weight: 600; }
-        .header-greeting { font-size: 12px; font-weight: 700; color: var(--slate); background: var(--border-light); padding: 6px 12px; border-radius: 20px; }
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .header-greeting { font-size: 12px; font-weight: 700; color: var(--slate); background: var(--border-light); padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1.5px solid transparent; transition: border-color 0.15s; }
+        .header-greeting:hover { border-color: var(--navy); }
+        .lien-admin { font-size: 10px; font-weight: 700; color: var(--slate-light); text-decoration: none; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); }
+        .lien-admin:hover { color: var(--navy); border-color: var(--navy); }
+
+        /* ─── MODALE PROFIL ─── */
+        .modale-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 200; display: flex; align-items: flex-start; justify-content: flex-end; padding: 70px 16px 0; }
+        .modale-profil { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; width: 260px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); animation: slideDown 0.18s ease; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+        .modale-titre { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--slate-light); letter-spacing: 0.5px; margin-bottom: 10px; }
+        .modale-input { width: 100%; padding: 11px 13px; background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; color: var(--navy); outline: none; margin-bottom: 10px; }
+        .modale-input:focus { border-color: var(--navy); }
+        .modale-btn { width: 100%; background: var(--navy); color: white; border: none; font-size: 13px; font-weight: 700; padding: 11px; border-radius: var(--radius-sm); cursor: pointer; }
+        .modale-sub { font-size: 11px; color: var(--slate-light); text-align: center; margin-top: 8px; }
 
         /* ─── LAYOUT ─── */
         main { max-width: 460px; margin: 0 auto; padding: 16px; }
@@ -190,8 +204,21 @@
             <div class="logo-sub">Réservation repas</div>
         </div>
     </div>
-    <div class="header-greeting" id="header-greeting" style="display:none;"></div>
+    <div class="header-right">
+        <button class="header-greeting" id="header-greeting" onclick="ouvrirModale()" title="Changer de profil">👤 <span id="greeting-nom">Mon profil</span></button>
+        <a href="admin.html" class="lien-admin">⚙️ Admin</a>
+    </div>
 </header>
+
+<!-- Modale changement de profil -->
+<div class="modale-overlay hidden" id="modale-overlay" onclick="fermerModale(event)">
+    <div class="modale-profil" onclick="event.stopPropagation()">
+        <div class="modale-titre">👤 Votre profil</div>
+        <input type="text" id="modale-nom-input" class="modale-input" placeholder="Nom & Prénom" autocomplete="name" onkeydown="if(event.key==='Enter') enregistrerProfil()">
+        <button class="modale-btn" onclick="enregistrerProfil()">Utiliser ce profil</button>
+        <div class="modale-sub">Votre nom est mémorisé sur cet appareil uniquement.</div>
+    </div>
+</div>
 
 <main>
 
@@ -355,14 +382,6 @@ function chargerMenus() {
         document.getElementById('zone-chargement').classList.add('hidden');
         document.getElementById('app-contenu').classList.remove('hidden');
         genererCalendrier();
-        // Accueil personnalisé
-        const nom = localStorage.getItem('nomUserSelf');
-        if (nom) {
-            const prenom = nom.split(' ')[0];
-            const el = document.getElementById('header-greeting');
-            el.textContent = 'Bonjour ' + prenom + ' 👋';
-            el.style.display = '';
-        }
     })
     .catch(() => {
         document.getElementById('zone-chargement').innerHTML =
@@ -377,23 +396,25 @@ function genererCalendrier() {
     const maintenant  = new Date();
     const heureAct    = maintenant.getHours();
     const minAct      = maintenant.getMinutes();
+    const depasseAuj  = heureAct > 10 || (heureAct === 10 && minAct >= 30);
     let affiches      = 0;
 
-    for (let i = 0; i < 15 && affiches < 5; i++) {
+    // On parcourt suffisamment de jours pour toujours trouver 5 jours ouvrés
+    for (let i = (depasseAuj ? 1 : 0); i < 30 && affiches < 5; i++) {
         const d   = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate() + i);
         const dow = d.getDay();
-        if (dow === 0 || dow === 6) continue;
+        if (dow === 0 || dow === 6) continue; // skip week-end
 
         const cle    = dateLocal(d);
         const menus  = menusDuServeur[cle] || {};
         const ouvert = (menus.A && menus.A.trim()) || (menus.B && menus.B.trim());
-        const depasse = i === 0 && (heureAct > 10 || (heureAct === 10 && minAct >= 30));
 
         const btn = document.createElement('div');
 
-        if (!ouvert || depasse) {
+        if (!ouvert) {
+            // Jour sans menu : affiché mais bloqué
             btn.className = 'btn-jour bloque';
-            btn.innerHTML = `<span class="j-nom">${JOURS_NOM[dow]}</span><span class="j-num">${d.getDate()}</span><span class="j-mois">${depasse && ouvert ? '⏰ FERMÉ' : '🔒 FERMÉ'}</span>`;
+            btn.innerHTML = `<span class="j-nom">${JOURS_NOM[dow]}</span><span class="j-num">${d.getDate()}</span><span class="j-mois">${MOIS_FR[d.getMonth()]}</span>`;
         } else {
             btn.className = 'btn-jour';
             btn.innerHTML = `<span class="j-nom">${JOURS_NOM[dow]}</span><span class="j-num">${d.getDate()}</span><span class="j-mois">${MOIS_FR[d.getMonth()]}</span>`;
@@ -500,12 +521,7 @@ document.getElementById('form-commande').addEventListener('submit', function(e) 
 
     localStorage.setItem('nomUserSelf', nom);
     localStorage.setItem('heureUserSelf', heure);
-
-    // Mise à jour greeting
-    const prenom = nom.split(' ')[0];
-    const greet  = document.getElementById('header-greeting');
-    greet.textContent = 'Bonjour ' + prenom + ' 👋';
-    greet.style.display = '';
+    mettreAJourGreeting(nom);
 
     const btn     = document.getElementById('btn-submit');
     const btnText = document.getElementById('btn-submit-text');
@@ -670,12 +686,45 @@ function confirmerAnnulation(date, nom) {
     });
 }
 
+// ─── PROFIL (modale) ──────────────────────────────────────────────────────────
+function ouvrirModale() {
+    const nom = localStorage.getItem('nomUserSelf') || '';
+    document.getElementById('modale-nom-input').value = nom;
+    document.getElementById('modale-overlay').classList.remove('hidden');
+    setTimeout(() => document.getElementById('modale-nom-input').focus(), 50);
+}
+function fermerModale(e) {
+    if (!e || e.target === document.getElementById('modale-overlay')) {
+        document.getElementById('modale-overlay').classList.add('hidden');
+    }
+}
+function enregistrerProfil() {
+    const nom = document.getElementById('modale-nom-input').value.trim();
+    if (!nom) return;
+    localStorage.setItem('nomUserSelf', nom);
+    mettreAJourGreeting(nom);
+    // Mettre à jour le champ nom dans le formulaire
+    document.getElementById('nom_client').value = nom;
+    document.getElementById('modale-overlay').classList.add('hidden');
+    // Rafraîchir les réservations si l'onglet est ouvert
+    if (!document.getElementById('contenu-reservations').classList.contains('hidden')) {
+        chargerMesReservations();
+    }
+    verifierDoublon();
+}
+function mettreAJourGreeting(nom) {
+    const prenom = (nom||'').split(' ')[0];
+    document.getElementById('greeting-nom').textContent = prenom || 'Mon profil';
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-    // Pré-remplir nom et heure mémorisés
     const nomSave   = localStorage.getItem('nomUserSelf');
     const heureSave = localStorage.getItem('heureUserSelf');
-    if (nomSave)   document.getElementById('nom_client').value    = nomSave;
+    if (nomSave) {
+        document.getElementById('nom_client').value = nomSave;
+        mettreAJourGreeting(nomSave);
+    }
     if (heureSave) document.getElementById('heure_retrait').value = heureSave;
 
     // Charger les inscriptions en arrière-plan pour la détection de doublons et stocks
