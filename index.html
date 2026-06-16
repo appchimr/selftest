@@ -189,6 +189,42 @@
         .resa-vide { text-align: center; padding: 40px 16px; color: var(--slate-light); font-size: 14px; font-weight: 600; }
         .resa-vide span { display: block; font-size: 36px; margin-bottom: 12px; }
 
+        /* ─── BANNIÈRE CHANGEMENT PLAT ─── */
+        .banniere-changement {
+            background: #fffbeb; border: 2px solid var(--amber); border-radius: var(--radius-lg);
+            padding: 14px 16px; margin-bottom: 16px;
+        }
+        .bch-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .bch-ico { font-size: 20px; flex-shrink: 0; }
+        .bch-titre { font-size: 13px; font-weight: 800; color: var(--amber-text); flex: 1; }
+        .bch-date { font-size: 11px; color: var(--amber-text); font-weight: 700; opacity: 0.75; }
+        .bch-plat { font-size: 13px; color: #78350f; font-weight: 600; margin-bottom: 12px; padding-left: 28px; }
+        .bch-btns { display: flex; gap: 8px; }
+        .bch-btn { flex: 1; border: none; padding: 10px 6px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
+        .bch-btn.confirmer { background: var(--green); color: white; }
+        .bch-btn.changer   { background: var(--blue-bg); color: var(--blue-text); border: 1px solid #bae6fd; }
+        .bch-btn.annuler   { background: var(--red-bg); color: var(--red-text); border: 1px solid var(--red-border); }
+        .bch-btn:disabled  { opacity: 0.5; cursor: not-allowed; }
+
+        /* ─── BANNIÈRE ALERTE CHANGEMENT ─── */
+        .alerte-changement {
+            background: #fffbeb; border: 2px solid var(--amber);
+            border-radius: var(--radius-lg); padding: 16px;
+            margin-bottom: 6px; animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+        .alerte-ch-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+        .alerte-ch-ico { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+        .alerte-ch-titre { font-size: 14px; font-weight: 800; color: var(--amber-text); line-height: 1.3; }
+        .alerte-ch-detail { font-size: 12px; color: #92400e; margin-top: 3px; font-weight: 600; }
+        .alerte-ch-btns { display: flex; flex-direction: column; gap: 7px; }
+        .btn-ch-confirmer { width: 100%; background: var(--amber); color: white; border: none; font-size: 13px; font-weight: 700; padding: 11px; border-radius: var(--radius-sm); cursor: pointer; }
+        .btn-ch-confirmer:hover { opacity: 0.9; }
+        .btn-ch-secondaire { display: flex; gap: 7px; }
+        .btn-ch-changer, .btn-ch-annuler { flex: 1; background: none; font-size: 12px; font-weight: 700; padding: 10px 8px; border-radius: var(--radius-sm); cursor: pointer; }
+        .btn-ch-changer { border: 1.5px solid var(--amber-text); color: var(--amber-text); }
+        .btn-ch-annuler { border: 1.5px solid var(--red-border); color: var(--red-text); }
+
         /* ─── FORME & ESPACE ─── */
         .space-form { margin-top: 20px; }
         .section-gap { margin-top: 22px; }
@@ -227,6 +263,9 @@
     </div>
 
     <div id="app-contenu" class="hidden">
+
+        <!-- Zone alertes changements de plat -->
+        <div id="zone-alertes-changement" style="margin-top:14px;"></div>
 
         <div class="tabs" style="margin-top:14px;">
             <button id="tab-reserver" class="actif" onclick="afficherOnglet('reserver')">🍴 Réserver</button>
@@ -382,11 +421,107 @@ function chargerMenus() {
         document.getElementById('zone-chargement').classList.add('hidden');
         document.getElementById('app-contenu').classList.remove('hidden');
         genererCalendrier();
+        // Vérifier les alertes une fois les deux sources chargées
+        if (toutesInscriptions.length > 0) verifierAlertesChangement();
     })
     .catch(() => {
         document.getElementById('zone-chargement').innerHTML =
             "❌ Impossible de charger les menus.<br><span style='font-size:12px;color:#94a3b8;'>Vérifiez votre connexion et rechargez la page.</span>";
     });
+}
+
+// ─── ALERTES CHANGEMENT DE PLAT ──────────────────────────────────────────────
+function verifierAlertesChangement() {
+    const nom  = localStorage.getItem('nomUserSelf') || '';
+    const zone = document.getElementById('zone-alertes-changement');
+    zone.innerHTML = '';
+    if (!nom) return;
+
+    const maintenant = new Date();
+    const auj        = dateLocal(maintenant);
+
+    // Chercher les réservations futures de cet utilisateur sur des jours avec un changement signalé
+    const alertes = toutesInscriptions.filter(c => {
+        const d = (c.date||'').toString().replace(/'/g,'').trim();
+        if (d < auj) return false; // passé
+        if (nomNormalise(c.nom) !== nomNormalise(nom)) return false;
+        const menus = menusDuServeur[d] || {};
+        const flagA = menus.changementA === true || menus.changementA === 'true';
+        const flagB = menus.changementB === true || menus.changementB === 'true';
+        return (c.menu === 'Menu A' && flagA) || (c.menu === 'Menu B' && flagB);
+    });
+
+    alertes.forEach(c => {
+        const d     = (c.date||'').toString().replace(/'/g,'').trim();
+        const menus = menusDuServeur[d] || {};
+        const isA   = c.menu === 'Menu A';
+        const nomPlat = (isA ? menus.A : menus.B) || c.menu;
+        const dateStr = formaterDateLong(d);
+        const idAlerte = 'ch-' + d;
+
+        const div = document.createElement('div');
+        div.className = 'alerte-changement';
+        div.id = idAlerte;
+        div.innerHTML = `
+            <div class="alerte-ch-header">
+                <div class="alerte-ch-ico">⚠️</div>
+                <div>
+                    <div class="alerte-ch-titre">Votre menu a changé — ${dateStr}</div>
+                    <div class="alerte-ch-detail">Votre commande : ${c.menu} · Nouveau plat : <strong>${nomPlat}</strong></div>
+                </div>
+            </div>
+            <div class="alerte-ch-btns">
+                <button class="btn-ch-confirmer" onclick="confirmerChangement('${d}','${nom}','${idAlerte}')">✅ Je confirme ce nouveau menu</button>
+                <div class="btn-ch-secondaire">
+                    <button class="btn-ch-changer" onclick="allerChangerMenu('${d}')">🔄 Changer de menu</button>
+                    <button class="btn-ch-annuler" onclick="annulerDepuisAlerte('${d}','${nom}','${idAlerte}')">🗑️ Annuler mon repas</button>
+                </div>
+            </div>
+        `;
+        zone.appendChild(div);
+    });
+}
+
+function confirmerChangement(date, nom, idAlerte) {
+    // Envoyer une confirmation (réenregistrement à l'identique = acquittement)
+    const resa = toutesInscriptions.find(c => {
+        const d = (c.date||'').toString().replace(/'/g,'').trim();
+        return d === date && nomNormalise(c.nom) === nomNormalise(nom);
+    });
+    if (!resa) return;
+    fetch(URL_SCRIPT_GOOGLE, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ action: 'enregistrerCommande', date, nom, menu: resa.menu, mode: resa.mode, heure: resa.heure || '' })
+    }).then(() => {
+        document.getElementById(idAlerte)?.remove();
+    }).catch(() => alert('Erreur réseau. Réessayez.'));
+}
+
+function allerChangerMenu(date) {
+    // Aller sur l'onglet réserver et pré-sélectionner ce jour
+    afficherOnglet('reserver');
+    // Trouver et cliquer le bouton du bon jour
+    const btn = document.querySelector(`.btn-jour[data-cle="${date}"]`);
+    if (btn) btn.click();
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Masquer l'alerte temporairement (elle disparaîtra après confirmation)
+}
+
+function annulerDepuisAlerte(date, nom, idAlerte) {
+    if (!confirm(`Confirmer l'annulation du repas du ${formaterDateLong(date)} ?`)) return;
+    fetch(URL_SCRIPT_GOOGLE, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ action: 'annulerInscription', nom, date })
+    }).then(() => {
+        toutesInscriptions = toutesInscriptions.filter(c => {
+            const d = (c.date||'').toString().replace(/'/g,'').trim();
+            return !(d === date && nomNormalise(c.nom) === nomNormalise(nom));
+        });
+        const el = document.getElementById(idAlerte);
+        if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }
+    }).catch(() => alert('Erreur réseau. Réessayez.'));
 }
 
 // ─── CALENDRIER ───────────────────────────────────────────────────────────────
@@ -417,6 +552,7 @@ function genererCalendrier() {
             btn.innerHTML = `<span class="j-nom">${JOURS_NOM[dow]}</span><span class="j-num">${d.getDate()}</span><span class="j-mois">${MOIS_FR[d.getMonth()]}</span>`;
         } else {
             btn.className = 'btn-jour';
+            btn.dataset.cle = cle;
             btn.innerHTML = `<span class="j-nom">${JOURS_NOM[dow]}</span><span class="j-num">${d.getDate()}</span><span class="j-mois">${MOIS_FR[d.getMonth()]}</span>`;
             btn.addEventListener('click', () => selectionnerJour(btn, cle, menus));
         }
@@ -686,6 +822,112 @@ function confirmerAnnulation(date, nom) {
     });
 }
 
+// ─── ALERTES CHANGEMENT DE PLAT ───────────────────────────────────────────────
+function verifierChangementsPlat() {
+    const nom  = localStorage.getItem('nomUserSelf') || '';
+    const zone = document.getElementById('zone-alertes-changement');
+    if (!nom || !toutesInscriptions.length) { zone.innerHTML = ''; return; }
+
+    const maintenant = new Date();
+    const auj        = dateLocal(maintenant);
+
+    // Trouver les réservations de cet utilisateur sur des jours futurs ou aujourd'hui
+    const miennes = toutesInscriptions.filter(r => {
+        const d = (r.date||'').toString().replace(/'/g,'').trim();
+        return d >= auj && nomNormalise(r.nom) === nomNormalise(nom);
+    });
+
+    const alertes = [];
+    miennes.forEach(r => {
+        const d    = (r.date||'').toString().replace(/'/g,'').trim();
+        const menu = menusDuServeur[d] || {};
+        const isA  = r.menu === 'Menu A';
+        const flag = isA ? menu.changementA : menu.changementB;
+        if (flag === true || flag === 'true') {
+            const nomPlat = isA ? (menu.A || 'Menu A') : (menu.B || 'Menu B');
+            alertes.push({ date: d, resa: r, nomPlat, menu: r.menu });
+        }
+    });
+
+    if (!alertes.length) { zone.innerHTML = ''; return; }
+
+    zone.innerHTML = alertes.map(a => `
+        <div class="banniere-changement" id="bch-${a.date}">
+            <div class="bch-header">
+                <span class="bch-ico">⚠️</span>
+                <span class="bch-titre">Le plat de votre réservation a changé</span>
+                <span class="bch-date">${formaterDateLong(a.date)}</span>
+            </div>
+            <div class="bch-plat">${a.menu} · ${a.nomPlat}</div>
+            <div class="bch-btns">
+                <button class="bch-btn confirmer" onclick="repondreChangement('confirmer','${a.date}','${nom}')">✅ Confirmer</button>
+                <button class="bch-btn changer"   onclick="repondreChangement('changer','${a.date}','${nom}')">🔄 Changer</button>
+                <button class="bch-btn annuler"   onclick="repondreChangement('annuler','${a.date}','${nom}')">🗑️ Annuler</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function repondreChangement(action, date, nom) {
+    const btns = document.querySelectorAll(`#bch-${date} .bch-btn`);
+    btns.forEach(b => b.disabled = true);
+
+    if (action === 'confirmer') {
+        // Envoyer une confirmation (réinscription identique)
+        const resa = toutesInscriptions.find(r => {
+            const d = (r.date||'').toString().replace(/'/g,'').trim();
+            return d === date && nomNormalise(r.nom) === nomNormalise(nom);
+        });
+        if (!resa) return;
+        fetch(URL_SCRIPT_GOOGLE, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ action: 'enregistrerCommande', date, nom, menu: resa.menu, mode: resa.mode, heure: resa.heure || '', confirme: 'true' })
+        }).then(() => masquerAlerte(date, 'Réservation confirmée ✅'));
+
+    } else if (action === 'annuler') {
+        fetch(URL_SCRIPT_GOOGLE, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ action: 'annulerInscription', nom, date })
+        }).then(() => {
+            toutesInscriptions = toutesInscriptions.filter(r => {
+                const d = (r.date||'').toString().replace(/'/g,'').trim();
+                return !(d === date && nomNormalise(r.nom) === nomNormalise(nom));
+            });
+            masquerAlerte(date, 'Réservation annulée');
+        });
+
+    } else if (action === 'changer') {
+        // Naviguer vers le formulaire sur ce jour
+        masquerAlerte(date, null);
+        afficherOnglet('reserver');
+        // Sélectionner le bon jour dans le calendrier
+        setTimeout(() => {
+            const btnJour = [...document.querySelectorAll('.btn-jour:not(.bloque)')].find(b => {
+                // Retrouver la date via l'événement click (on recalcule)
+                return b._dateCle === date;
+            });
+            // On identifie les boutons du calendrier par data attribute
+            const tous = document.querySelectorAll('.btn-jour');
+            tous.forEach(b => {
+                if (b.dataset.cle === date) b.click();
+            });
+        }, 100);
+    }
+}
+
+function masquerAlerte(date, message) {
+    const bch = document.getElementById('bch-'+date);
+    if (!bch) return;
+    if (message) {
+        bch.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--green-text);">✅ ${message}</div>`;
+        setTimeout(() => { bch.style.opacity='0'; bch.style.transition='opacity 0.5s'; setTimeout(()=>bch.remove(),500); }, 2000);
+    } else {
+        bch.remove();
+    }
+}
+
 // ─── PROFIL (modale) ──────────────────────────────────────────────────────────
 function ouvrirModale() {
     const nom = localStorage.getItem('nomUserSelf') || '';
@@ -743,7 +985,11 @@ window.addEventListener('DOMContentLoaded', () => {
     // Charger les inscriptions en arrière-plan pour la détection de doublons et stocks
     fetch(URL_SCRIPT_GOOGLE + "?action=obtenirInscriptions")
         .then(r => r.json())
-        .then(data => { toutesInscriptions = data; })
+        .then(data => {
+            toutesInscriptions = data;
+            // Vérifier alertes changement si menus déjà chargés
+            if (Object.keys(menusDuServeur).length > 0) verifierAlertesChangement();
+        })
         .catch(() => {});
 
     chargerMenus();

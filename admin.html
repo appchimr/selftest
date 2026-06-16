@@ -129,11 +129,10 @@
         .banniere-pub .pub-check { width: 32px; height: 32px; background: rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
 
         /* ─── ALERTE CHANGEMENT DE PLAT ─── */
-        .changement-wrap { margin-top: 12px; padding: 10px 12px; background: var(--amber-bg); border: 1px solid var(--amber); border-radius: var(--radius-sm); display: flex; align-items: flex-start; gap: 8px; }
-        .changement-wrap .ico { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-        .changement-label { font-size: 10px; font-weight: 800; color: var(--amber-text); text-transform: uppercase; margin-bottom: 3px; }
-        .changement-input { width: 100%; padding: 8px 10px; border: 1.5px solid var(--amber); border-radius: 6px; font-size: 13px; color: var(--navy); background: white; outline: none; resize: none; font-family: inherit; }
-        .changement-input:focus { border-color: var(--amber-text); }
+        .changement-wrap { margin-top: 10px; padding: 10px 12px; background: var(--amber-bg); border: 1px solid var(--amber); border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; }
+        .changement-wrap .ico { font-size: 16px; flex-shrink: 0; }
+        .changement-label { font-size: 12px; font-weight: 700; color: var(--amber-text); flex: 1; }
+        .changement-wrap input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--amber-text); flex-shrink: 0; }
 
         /* ─── SECTION REGISTRE ─── */
         .registre-top { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
@@ -412,11 +411,8 @@ function genererInterfaceMenus() {
                 </div>
                 <div id="alerte-A-${cle}" style="display:none;" class="changement-wrap">
                     <span class="ico">⚠️</span>
-                    <div style="flex:1;">
-                        <div class="changement-label">Plat modifié — message aux inscrits (facultatif)</div>
-                        <textarea id="msg-A-${cle}" class="changement-input" rows="2"
-                            placeholder="Ex : Le poulet est remplacé par du saumon grillé. Merci de confirmer votre présence."></textarea>
-                    </div>
+                    <label class="changement-label" for="chg-A-${cle}">Signaler aux inscrits que le Menu A a changé</label>
+                    <input type="checkbox" id="chg-A-${cle}" checked>
                 </div>
 
                 <div class="input-group" style="margin-top:12px;">
@@ -438,11 +434,8 @@ function genererInterfaceMenus() {
                 </div>
                 <div id="alerte-B-${cle}" style="display:none;" class="changement-wrap">
                     <span class="ico">⚠️</span>
-                    <div style="flex:1;">
-                        <div class="changement-label">Plat modifié — message aux inscrits (facultatif)</div>
-                        <textarea id="msg-B-${cle}" class="changement-input" rows="2"
-                            placeholder="Ex : Le gratin est remplacé par une quiche lorraine. Merci de confirmer."></textarea>
-                    </div>
+                    <label class="changement-label" for="chg-B-${cle}">Signaler aux inscrits que le Menu B a changé</label>
+                    <input type="checkbox" id="chg-B-${cle}" checked>
                 </div>
             </div>
         `;
@@ -499,8 +492,8 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         const chkB   = document.getElementById('chk-limB-'+cle)?.checked;
         const valLimA = document.getElementById('limA-'+cle)?.value;
         const valLimB = document.getElementById('limB-'+cle)?.value;
-        const msgA   = document.getElementById('msg-A-'+cle)?.value?.trim() || '';
-        const msgB   = document.getElementById('msg-B-'+cle)?.value?.trim() || '';
+        const msgA   = document.getElementById('chg-A-'+cle)?.checked && document.getElementById(`alerte-A-${cle}`)?.style.display !== 'none';
+        const msgB   = document.getElementById('chg-B-'+cle)?.checked && document.getElementById(`alerte-B-${cle}`)?.style.display !== 'none';
         paquets.push({
             date:    cle,
             menuA:   ferme ? '' : (document.getElementById('a-'+cle)?.value || ''),
@@ -508,8 +501,8 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
             ferme:   ferme,
             limiteA: (chkA && valLimA) ? parseInt(valLimA) : null,
             limiteB: (chkB && valLimB) ? parseInt(valLimB) : null,
-            changementA: msgA,
-            changementB: msgB,
+            changementA: msgA ? true : false,
+            changementB: msgB ? true : false,
         });
     });
 
@@ -518,7 +511,7 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         body: new URLSearchParams({ action: "enregistrerMenus", donnees: JSON.stringify(paquets) })
     }).then(() => {
         paquets.forEach(p => {
-            menusServeurComplets[p.date] = { A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB };
+            menusServeurComplets[p.date] = { A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB, changementA: p.changementA, changementB: p.changementB };
             // Mettre à jour les data-original pour que la prochaine modif se compare au nouveau menu
             const inputA = document.getElementById('a-'+p.date);
             const inputB = document.getElementById('b-'+p.date);
