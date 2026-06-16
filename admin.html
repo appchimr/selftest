@@ -110,9 +110,30 @@
         .limite-input { width: 72px !important; text-align: center; font-weight: 700 !important; }
         .limite-input:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .btn-publier { width: 100%; background: var(--navy); color: white; border: none; font-size: 14px; font-weight: 700; text-transform: uppercase; padding: 15px; border-radius: var(--radius-lg); cursor: pointer; margin-top: 6px; transition: opacity 0.2s; }
+        .btn-publier { width: 100%; background: var(--navy); color: white; border: none; font-size: 14px; font-weight: 700; text-transform: uppercase; padding: 15px; border-radius: var(--radius-lg); cursor: pointer; margin-top: 6px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-publier:hover { opacity: 0.88; }
-        .toast { background: var(--green); color: white; text-align: center; font-size: 13px; font-weight: 700; padding: 12px; border-radius: var(--radius-md); margin-top: 12px; display: none; }
+        .btn-publier:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ─── BANNIÈRE DE CONFIRMATION PUBLICATION ─── */
+        .banniere-pub {
+            position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(120px);
+            background: #059669; color: white;
+            padding: 16px 32px; border-radius: 50px;
+            font-size: 15px; font-weight: 800;
+            box-shadow: 0 12px 40px rgba(5,150,105,0.45);
+            display: flex; align-items: center; gap: 12px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+            opacity: 0; z-index: 999; white-space: nowrap;
+        }
+        .banniere-pub.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .banniere-pub .pub-check { width: 32px; height: 32px; background: rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+
+        /* ─── ALERTE CHANGEMENT DE PLAT ─── */
+        .changement-wrap { margin-top: 12px; padding: 10px 12px; background: var(--amber-bg); border: 1px solid var(--amber); border-radius: var(--radius-sm); display: flex; align-items: flex-start; gap: 8px; }
+        .changement-wrap .ico { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .changement-label { font-size: 10px; font-weight: 800; color: var(--amber-text); text-transform: uppercase; margin-bottom: 3px; }
+        .changement-input { width: 100%; padding: 8px 10px; border: 1.5px solid var(--amber); border-radius: 6px; font-size: 13px; color: var(--navy); background: white; outline: none; resize: none; font-family: inherit; }
+        .changement-input:focus { border-color: var(--amber-text); }
 
         /* ─── SECTION REGISTRE ─── */
         .registre-top { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
@@ -209,9 +230,16 @@
             <div id="semaine-titre" class="semaine-titre">Chargement…</div>
             <form id="form-admin">
                 <div class="jour-grid" id="conteneur-jours"></div>
-                <button type="submit" class="btn-publier">🚀 Publier les menus</button>
-                <div class="toast" id="toast-pub">✅ Menus publiés avec succès !</div>
+                <button type="submit" class="btn-publier" id="btn-publier">
+                    <span>🚀</span> <span id="btn-publier-text">Publier les menus</span>
+                </button>
             </form>
+        </div>
+
+        <!-- Bannière de confirmation flottante -->
+        <div class="banniere-pub" id="banniere-pub">
+            <div class="pub-check">✓</div>
+            Menus publiés avec succès !
         </div>
 
         <!-- ══════ SECTION REGISTRE ══════ -->
@@ -349,6 +377,7 @@ function genererInterfaceMenus() {
         const cle  = dateLocal(d);
         const menu = menusServeurComplets[cle] || {};
         const ferme = menu.ferme === true || menu.ferme === 'true';
+        const dejaPublie = !!(menu.A || menu.B); // menus déjà publiés pour ce jour
 
         const bloc = document.createElement('div');
         bloc.className = 'jour-bloc';
@@ -366,7 +395,9 @@ function genererInterfaceMenus() {
             <div id="champs-${cle}" ${ferme ? 'style="opacity:.35;pointer-events:none;"' : ''}>
                 <div class="input-group">
                     <div class="input-label"><span style="color:#b45309;">🍖</span> Menu A – Intitulé du plat</div>
-                    <input type="text" id="a-${cle}" value="${menu.A||''}" placeholder="Ex : Poulet rôti aux herbes">
+                    <input type="text" id="a-${cle}" value="${menu.A||''}" placeholder="Ex : Poulet rôti aux herbes"
+                        data-original="${(menu.A||'').replace(/"/g,'&quot;')}"
+                        onblur="detecterChangement('A','${cle}')">
                 </div>
                 <div class="input-group">
                     <div class="limite-toggle">
@@ -379,10 +410,20 @@ function genererInterfaceMenus() {
                         ${menu.limiteA != null ? '' : 'disabled'}
                         style="width:80px;">
                 </div>
+                <div id="alerte-A-${cle}" style="display:none;" class="changement-wrap">
+                    <span class="ico">⚠️</span>
+                    <div style="flex:1;">
+                        <div class="changement-label">Plat modifié — message aux inscrits (facultatif)</div>
+                        <textarea id="msg-A-${cle}" class="changement-input" rows="2"
+                            placeholder="Ex : Le poulet est remplacé par du saumon grillé. Merci de confirmer votre présence."></textarea>
+                    </div>
+                </div>
 
-                <div class="input-group" style="margin-top:10px;">
+                <div class="input-group" style="margin-top:12px;">
                     <div class="input-label"><span style="color:#047857;">🌿</span> Menu B – Intitulé du plat</div>
-                    <input type="text" id="b-${cle}" value="${menu.B||''}" placeholder="Ex : Gratin de légumes">
+                    <input type="text" id="b-${cle}" value="${menu.B||''}" placeholder="Ex : Gratin de légumes"
+                        data-original="${(menu.B||'').replace(/"/g,'&quot;')}"
+                        onblur="detecterChangement('B','${cle}')">
                 </div>
                 <div class="input-group">
                     <div class="limite-toggle">
@@ -395,9 +436,30 @@ function genererInterfaceMenus() {
                         ${menu.limiteB != null ? '' : 'disabled'}
                         style="width:80px;">
                 </div>
+                <div id="alerte-B-${cle}" style="display:none;" class="changement-wrap">
+                    <span class="ico">⚠️</span>
+                    <div style="flex:1;">
+                        <div class="changement-label">Plat modifié — message aux inscrits (facultatif)</div>
+                        <textarea id="msg-B-${cle}" class="changement-input" rows="2"
+                            placeholder="Ex : Le gratin est remplacé par une quiche lorraine. Merci de confirmer."></textarea>
+                    </div>
+                </div>
             </div>
         `;
         conteneur.appendChild(bloc);
+    }
+}
+
+function detecterChangement(lettre, cle) {
+    const input         = document.getElementById(`${lettre.toLowerCase()}-${cle}`);
+    const ancienneValeur = input.getAttribute('data-original') || '';
+    const nouvelleValeur = input.value.trim();
+    const alerte        = document.getElementById(`alerte-${lettre}-${cle}`);
+    // Afficher uniquement si le plat était déjà publié et a réellement changé
+    if (ancienneValeur && nouvelleValeur && nouvelleValeur !== ancienneValeur) {
+        alerte.style.display = 'flex';
+    } else {
+        alerte.style.display = 'none';
     }
 }
 
@@ -416,8 +478,19 @@ function toggleLimite(lettre, cle) {
     else { input.focus(); input.value = input.value || ''; }
 }
 
+function afficherBanniere() {
+    const b = document.getElementById('banniere-pub');
+    b.classList.add('visible');
+    setTimeout(() => b.classList.remove('visible'), 3500);
+}
+
 document.getElementById('form-admin').addEventListener('submit', function(e) {
     e.preventDefault();
+    const btn     = document.getElementById('btn-publier');
+    const btnText = document.getElementById('btn-publier-text');
+    btn.disabled  = true;
+    btnText.textContent = 'Publication…';
+
     const paquets = [];
     document.querySelectorAll('.jour-bloc').forEach(bloc => {
         const cle    = bloc.querySelector('[data-date]').getAttribute('data-date');
@@ -426,27 +499,42 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         const chkB   = document.getElementById('chk-limB-'+cle)?.checked;
         const valLimA = document.getElementById('limA-'+cle)?.value;
         const valLimB = document.getElementById('limB-'+cle)?.value;
+        const msgA   = document.getElementById('msg-A-'+cle)?.value?.trim() || '';
+        const msgB   = document.getElementById('msg-B-'+cle)?.value?.trim() || '';
         paquets.push({
-            date:   cle,
-            menuA:  ferme ? '' : (document.getElementById('a-'+cle)?.value || ''),
-            menuB:  ferme ? '' : (document.getElementById('b-'+cle)?.value || ''),
-            ferme:  ferme,
+            date:    cle,
+            menuA:   ferme ? '' : (document.getElementById('a-'+cle)?.value || ''),
+            menuB:   ferme ? '' : (document.getElementById('b-'+cle)?.value || ''),
+            ferme:   ferme,
             limiteA: (chkA && valLimA) ? parseInt(valLimA) : null,
             limiteB: (chkB && valLimB) ? parseInt(valLimB) : null,
+            changementA: msgA,
+            changementB: msgB,
         });
     });
-    const toast = document.getElementById('toast-pub');
+
     fetch(URL_SCRIPT_GOOGLE, {
         method: "POST", mode: "no-cors",
         body: new URLSearchParams({ action: "enregistrerMenus", donnees: JSON.stringify(paquets) })
     }).then(() => {
-        // Mettre à jour le cache local
         paquets.forEach(p => {
             menusServeurComplets[p.date] = { A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB };
+            // Mettre à jour les data-original pour que la prochaine modif se compare au nouveau menu
+            const inputA = document.getElementById('a-'+p.date);
+            const inputB = document.getElementById('b-'+p.date);
+            if (inputA) inputA.setAttribute('data-original', p.menuA);
+            if (inputB) inputB.setAttribute('data-original', p.menuB);
         });
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 3000);
-    }).catch(() => alert('Erreur réseau lors de la publication.'));
+        btn.disabled = false;
+        btnText.textContent = 'Publier les menus';
+        afficherBanniere();
+        // Masquer les alertes de changement après publication
+        document.querySelectorAll('.changement-wrap').forEach(el => el.style.display = 'none');
+    }).catch(() => {
+        btn.disabled = false;
+        btnText.textContent = 'Publier les menus';
+        alert('Erreur réseau lors de la publication. Réessayez.');
+    });
 });
 
 // ─── REGISTRE ─────────────────────────────────────────────────────────────────
