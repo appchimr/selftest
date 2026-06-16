@@ -446,8 +446,8 @@ function verifierAlertesChangement() {
         if (d < auj) return false; // passé
         if (nomNormalise(c.nom) !== nomNormalise(nom)) return false;
         const menus = menusDuServeur[d] || {};
-        const flagA = menus.changementA === true || menus.changementA === 'true';
-        const flagB = menus.changementB === true || menus.changementB === 'true';
+        const flagA = menus.alerteA === true || menus.alerteA === 'true';
+        const flagB = menus.alerteB === true || menus.alerteB === 'true';
         return (c.menu === 'Menu A' && flagA) || (c.menu === 'Menu B' && flagB);
     });
 

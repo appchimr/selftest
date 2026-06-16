@@ -501,8 +501,8 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
             ferme:   ferme,
             limiteA: (chkA && valLimA) ? parseInt(valLimA) : null,
             limiteB: (chkB && valLimB) ? parseInt(valLimB) : null,
-            changementA: msgA ? true : false,
-            changementB: msgB ? true : false,
+            alerteA: msgA ? true : false,
+            alerteB: msgB ? true : false,
         });
     });
 
@@ -511,7 +511,7 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         body: new URLSearchParams({ action: "enregistrerMenus", donnees: JSON.stringify(paquets) })
     }).then(() => {
         paquets.forEach(p => {
-            menusServeurComplets[p.date] = { A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB, changementA: p.changementA, changementB: p.changementB };
+            menusServeurComplets[p.date] = { A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB, alerteA: p.alerteA, alerteB: p.alerteB };
             // Mettre à jour les data-original pour que la prochaine modif se compare au nouveau menu
             const inputA = document.getElementById('a-'+p.date);
             const inputB = document.getElementById('b-'+p.date);
