@@ -283,6 +283,12 @@
 
             <form id="form-commande" class="hidden space-form">
 
+                <!-- Alerte doublon -->
+                <div class="verif-box" id="verif-doublon">
+                    <span style="font-size:18px; flex-shrink:0;">⚠️</span>
+                    <span id="msg-doublon">Vous avez déjà une réservation ce jour-là. En confirmant, votre commande précédente sera remplacée.</span>
+                </div>
+
                 <div>
                     <div class="section-label">1 · Votre assiette</div>
 
@@ -323,12 +329,6 @@
 
                 <div>
                     <div class="section-label">3 · Finaliser</div>
-
-                    <!-- Alerte doublon -->
-                    <div class="verif-box" id="verif-doublon">
-                        <span style="font-size:18px; flex-shrink:0;">⚠️</span>
-                        <span id="msg-doublon">Vous avez déjà une réservation ce jour-là. En confirmant, votre commande précédente sera remplacée.</span>
-                    </div>
 
                     <div class="bloc-info">
                         <div class="input-group">
