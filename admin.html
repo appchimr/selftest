@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin · Self CHIMR</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
     <style>
         :root {
             --bg: #f1f5f9;
@@ -409,10 +409,10 @@ function genererInterfaceMenus() {
                         ${menu.limiteA != null ? '' : 'disabled'}
                         style="width:80px;">
                 </div>
-                <div id="alerte-A-${cle}" style="display:none;" class="changement-wrap">
-                    <span class="ico">⚠️</span>
-                    <label class="changement-label" for="chg-A-${cle}">Signaler aux inscrits que le Menu A a changé</label>
-                    <input type="checkbox" id="chg-A-${cle}" checked>
+                <div id="alerte-A-${cle}" class="changement-wrap" style="${menu.alerteA ? '' : 'opacity:0.5;'}">
+                    <label class="changement-label" for="chg-A-${cle}">⚠️ Alerter les inscrits du Menu A</label>
+                    <input type="checkbox" id="chg-A-${cle}" ${menu.alerteA ? 'checked' : ''}
+                        onchange="this.closest('.changement-wrap').style.opacity = this.checked ? '1' : '0.5'">
                 </div>
 
                 <div class="input-group" style="margin-top:12px;">
@@ -432,10 +432,10 @@ function genererInterfaceMenus() {
                         ${menu.limiteB != null ? '' : 'disabled'}
                         style="width:80px;">
                 </div>
-                <div id="alerte-B-${cle}" style="display:none;" class="changement-wrap">
-                    <span class="ico">⚠️</span>
-                    <label class="changement-label" for="chg-B-${cle}">Signaler aux inscrits que le Menu B a changé</label>
-                    <input type="checkbox" id="chg-B-${cle}" checked>
+                <div id="alerte-B-${cle}" class="changement-wrap" style="${menu.alerteB ? '' : 'opacity:0.5;'}">
+                    <label class="changement-label" for="chg-B-${cle}">⚠️ Alerter les inscrits du Menu B</label>
+                    <input type="checkbox" id="chg-B-${cle}" ${menu.alerteB ? 'checked' : ''}
+                        onchange="this.closest('.changement-wrap').style.opacity = this.checked ? '1' : '0.5'">
                 </div>
             </div>
         `;
@@ -492,8 +492,8 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         const chkB   = document.getElementById('chk-limB-'+cle)?.checked;
         const valLimA = document.getElementById('limA-'+cle)?.value;
         const valLimB = document.getElementById('limB-'+cle)?.value;
-        const msgA   = document.getElementById('chg-A-'+cle)?.checked && document.getElementById(`alerte-A-${cle}`)?.style.display !== 'none';
-        const msgB   = document.getElementById('chg-B-'+cle)?.checked && document.getElementById(`alerte-B-${cle}`)?.style.display !== 'none';
+        const msgA   = document.getElementById('chg-A-'+cle)?.checked ?? false;
+        const msgB   = document.getElementById('chg-B-'+cle)?.checked ?? false;
         paquets.push({
             date:    cle,
             menuA:   ferme ? '' : (document.getElementById('a-'+cle)?.value || ''),
@@ -522,7 +522,11 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         btnText.textContent = 'Publier les menus';
         afficherBanniere();
         // Masquer les alertes de changement après publication
-        document.querySelectorAll('.changement-wrap').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.changement-wrap').forEach(el => {
+            const chk = el.querySelector('input[type="checkbox"]');
+            if (chk) { chk.checked = false; }
+            el.style.opacity = '0.5';
+        });
     }).catch(() => {
         btn.disabled = false;
         btnText.textContent = 'Publier les menus';
