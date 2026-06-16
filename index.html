@@ -483,19 +483,27 @@ function verifierAlertesChangement() {
 }
 
 function confirmerChangement(date, nom, idAlerte) {
-    // Envoyer une confirmation (réenregistrement à l'identique = acquittement)
-    const resa = toutesInscriptions.find(c => {
-        const d = (c.date||'').toString().replace(/'/g,'').trim();
-        return d === date && nomNormalise(c.nom) === nomNormalise(nom);
-    });
-    if (!resa) return;
+    const btn = document.querySelector(`#${idAlerte} .btn-ch-confirmer`);
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+    // 1. Acquitter le flag alerte côté serveur
     fetch(URL_SCRIPT_GOOGLE, {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ action: 'enregistrerCommande', date, nom, menu: resa.menu, mode: resa.mode, heure: resa.heure || '' })
+        body: new URLSearchParams({ action: 'acquitterAlerte', date })
     }).then(() => {
-        document.getElementById(idAlerte)?.remove();
-    }).catch(() => alert('Erreur réseau. Réessayez.'));
+        // 2. Mettre à jour le cache local
+        if (menusDuServeur[date]) {
+            menusDuServeur[date].alerteA = false;
+            menusDuServeur[date].alerteB = false;
+        }
+        // 3. Supprimer la bannière
+        const el = document.getElementById(idAlerte);
+        if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }
+    }).catch(() => {
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Je confirme ce nouveau menu'; }
+        alert('Erreur réseau. Réessayez.');
+    });
 }
 
 function allerChangerMenu(date) {
@@ -510,15 +518,24 @@ function allerChangerMenu(date) {
 
 function annulerDepuisAlerte(date, nom, idAlerte) {
     if (!confirm(`Confirmer l'annulation du repas du ${formaterDateLong(date)} ?`)) return;
-    fetch(URL_SCRIPT_GOOGLE, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ action: 'annulerInscription', nom, date })
-    }).then(() => {
+    // Annuler la réservation ET acquitter l'alerte
+    Promise.all([
+        fetch(URL_SCRIPT_GOOGLE, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ action: 'annulerInscription', nom, date })
+        }),
+        fetch(URL_SCRIPT_GOOGLE, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ action: 'acquitterAlerte', date })
+        })
+    ]).then(() => {
         toutesInscriptions = toutesInscriptions.filter(c => {
             const d = (c.date||'').toString().replace(/'/g,'').trim();
             return !(d === date && nomNormalise(c.nom) === nomNormalise(nom));
         });
+        if (menusDuServeur[date]) { menusDuServeur[date].alerteA = false; menusDuServeur[date].alerteB = false; }
         const el = document.getElementById(idAlerte);
         if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }
     }).catch(() => alert('Erreur réseau. Réessayez.'));
