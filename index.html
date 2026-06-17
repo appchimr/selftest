@@ -208,44 +208,6 @@
         .btn-ch-changer { border: 1.5px solid var(--amber-text); color: var(--amber-text); }
         .btn-ch-annuler { border: 1.5px solid var(--red-border); color: var(--red-text); }
 
-        /* ─── PANIER ─── */
-        .panier-flottant {
-            position: fixed; bottom: 18px; left: 16px; right: 16px; max-width: 428px; margin: 0 auto;
-            background: var(--navy); color: white; border-radius: var(--radius-lg);
-            padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25); cursor: pointer; z-index: 100;
-            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .panier-flottant:active { transform: scale(0.97); }
-        .panier-flottant-info { display: flex; align-items: center; gap: 10px; }
-        .panier-flottant-badge { background: var(--amber); color: var(--navy); font-size: 12px; font-weight: 800; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .panier-flottant-texte { font-size: 13px; font-weight: 700; }
-        .panier-flottant-fleche { font-size: 13px; font-weight: 700; opacity: 0.7; }
-
-        .btn-ajouter-panier {
-            width: 100%; background: var(--white); color: var(--navy); border: 2px solid var(--navy);
-            font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-            padding: 15px; border-radius: var(--radius-md); cursor: pointer;
-            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
-            margin-bottom: 10px;
-        }
-        .btn-ajouter-panier:hover:not(:disabled) { background: var(--navy); color: white; }
-        .btn-ajouter-panier:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        .panier-item-jour { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
-        .pij-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .pij-date { font-size: 13px; font-weight: 800; color: var(--navy); }
-        .pij-retirer { background: none; border: none; color: var(--slate-light); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
-        .pij-retirer:hover { color: var(--red); }
-        .pij-detail { font-size: 12px; color: var(--slate); margin-top: 2px; }
-
-        .ecran-panier-vide { text-align: center; padding: 50px 16px; color: var(--slate-light); font-size: 14px; font-weight: 600; }
-        .ecran-panier-vide span { display: block; font-size: 40px; margin-bottom: 14px; }
-
-        .recap-panier-total { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; margin: 16px 0; display: flex; justify-content: space-between; align-items: center; }
-        .rpt-label { font-size: 13px; font-weight: 700; color: var(--slate); }
-        .rpt-val { font-size: 20px; font-weight: 800; color: var(--navy); }
-
         /* ─── FORME & ESPACE ─── */
         .space-form { margin-top: 20px; }
         .section-gap { margin-top: 22px; }
@@ -368,15 +330,19 @@
                     </div>
                 </div>
 
-                <button type="submit" id="btn-submit" class="btn-ajouter-panier">
-                    <span>🛒</span> <span id="btn-submit-text">Ajouter au panier</span>
+                <button type="submit" id="btn-submit" class="btn-submit">
+                    <span>✅</span> <span id="btn-submit-text">Confirmer la commande</span>
                 </button>
                 <div id="msg-erreur" class="msg-erreur">⚠️ Erreur de connexion. Vérifiez votre accès réseau et réessayez.</div>
             </form>
 
-            <!-- Confirmation d'ajout au panier (toast léger, pas un écran complet) -->
-            <div id="toast-ajout-panier" class="hidden" style="background:var(--green-bg);border:1.5px solid var(--green);color:var(--green-text);border-radius:var(--radius-md);padding:14px 16px;text-align:center;font-weight:700;font-size:13px;margin-top:10px;">
-                ✅ Ajouté au panier !
+            <!-- Écran de confirmation -->
+            <div id="ecran-confirmation" class="ecran-confirmation hidden">
+                <div class="confetti-wrap">✅</div>
+                <div class="conf-titre">Réservation enregistrée !</div>
+                <p class="conf-sub">À tout à l'heure au self 🍽️</p>
+                <div class="conf-recap" id="recap-commande"></div>
+                <button class="btn-nouvelle-resa" onclick="nouvelleReservation()">Faire une autre réservation</button>
             </div>
 
         </div><!-- /contenu-reserver -->
@@ -388,27 +354,7 @@
 
     </div><!-- /app-contenu -->
 
-    <!-- Panier flottant -->
-    <div id="panier-flottant" class="panier-flottant hidden" onclick="ouvrirPanier()">
-        <div class="panier-flottant-info">
-            <div class="panier-flottant-badge" id="panier-flottant-badge">0</div>
-            <div class="panier-flottant-texte">Voir mon panier</div>
-        </div>
-        <div class="panier-flottant-fleche">→</div>
-    </div>
-
 </main>
-
-<!-- Écran panier (modale plein écran) -->
-<div id="ecran-panier" class="modale-overlay hidden" style="align-items:flex-end;justify-content:center;padding:0;" onclick="if(event.target===this) fermerPanier()">
-    <div style="background:var(--bg);width:100%;max-width:460px;border-radius:24px 24px 0 0;padding:20px 16px 24px;max-height:88vh;overflow-y:auto;animation:slideDown 0.25s ease;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <div style="font-size:17px;font-weight:800;color:var(--navy);">🛒 Mon panier</div>
-            <button onclick="fermerPanier()" style="background:var(--border);border:none;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;color:var(--slate);">✕</button>
-        </div>
-        <div id="contenu-panier"></div>
-    </div>
-</div>
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
@@ -422,7 +368,6 @@ const MOIS_LONG  = ["janvier","février","mars","avril","mai","juin","juillet","
 let dateSelectionneeISO = "";
 let menusDuServeur      = {};   // { "2026-06-16": { A:"...", B:"...", limiteA: null, limiteB: 20 }, ... }
 let toutesInscriptions  = [];   // cache chargé une seule fois par session
-let panier              = [];   // [{ date, menu, mode, heure, nomPlat }, ...]
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 function dateLocal(d) {
@@ -635,17 +580,8 @@ function selectionnerJour(btnEl, cle, menus) {
     document.querySelectorAll('input[name="choix_menu"]').forEach(r => r.checked = false);
 
     document.getElementById('form-commande').classList.remove('hidden');
+    document.getElementById('ecran-confirmation').classList.add('hidden');
     document.getElementById('msg-erreur').style.display = 'none';
-
-    // Si ce jour est déjà dans le panier, pré-remplir avec son contenu pour modification
-    const itemPanier = panier.find(p => p.date === cle);
-    if (itemPanier) {
-        const radio = document.querySelector(`input[name="choix_menu"][value="${itemPanier.menu}"]`);
-        if (radio && !radio.disabled) radio.checked = true;
-        const modeRadio = document.querySelector(`input[name="mode_retrait"][value="${itemPanier.mode}"]`);
-        if (modeRadio) modeRadio.checked = true;
-        document.getElementById('heure_retrait').value = itemPanier.heure;
-    }
 
     // Vérifier doublon
     verifierDoublon();
@@ -666,15 +602,11 @@ function gererLimiteMenu(lettre, limite, cle, menus) {
         return;
     }
 
-    // Compter réservations actuelles (serveur + panier en attente) pour ce menu/jour
-    const compter = () => {
-        const dansInscriptions = toutesInscriptions.filter(c => {
-            const d = (c.date||'').toString().replace(/'/g,'').trim();
-            return d === cle && c.menu === 'Menu ' + lettre;
-        }).length;
-        const dansPanier = panier.filter(p => p.date === cle && p.menu === 'Menu ' + lettre).length;
-        return dansInscriptions + dansPanier;
-    };
+    // Compter réservations actuelles pour ce menu/jour depuis le cache
+    const compter = () => toutesInscriptions.filter(c => {
+        const d = (c.date||'').toString().replace(/'/g,'').trim();
+        return d === cle && c.menu === 'Menu ' + lettre;
+    }).length;
 
     const count    = compter();
     const restants = limite - count;
@@ -698,179 +630,93 @@ function gererLimiteMenu(lettre, limite, cle, menus) {
 function verifierDoublon() {
     const nom  = localStorage.getItem('nomUserSelf') || '';
     const box  = document.getElementById('verif-doublon');
-    const msg  = document.getElementById('msg-doublon');
-    if (!dateSelectionneeISO) { box.classList.remove('visible'); return; }
-
-    const dansLePanier = panier.some(p => p.date === dateSelectionneeISO);
-    const dejaEnregistre = nom && toutesInscriptions.some(c => {
+    if (!nom || !dateSelectionneeISO || toutesInscriptions.length === 0) {
+        box.classList.remove('visible');
+        return;
+    }
+    const deja = toutesInscriptions.some(c => {
         const d = (c.date||'').toString().replace(/'/g,'').trim();
         return d === dateSelectionneeISO && nomNormalise(c.nom) === nomNormalise(nom);
     });
-
-    if (dansLePanier) {
-        msg.textContent = 'Vous avez déjà ce jour-là dans votre panier. En ajoutant, votre choix précédent sera remplacé.';
-        box.classList.add('visible');
-    } else if (dejaEnregistre) {
-        msg.textContent = 'Vous avez déjà une réservation ce jour-là. En confirmant, votre commande précédente sera remplacée.';
-        box.classList.add('visible');
-    } else {
-        box.classList.remove('visible');
-    }
+    box.classList.toggle('visible', deja);
 }
 
-function onNomChange() { verifierDoublon(); }
-// ─── SOUMISSION FORMULAIRE → AJOUT AU PANIER ──────────────────────────────────
+// ─── SOUMISSION FORMULAIRE ────────────────────────────────────────────────────
 document.getElementById('form-commande').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const nom = localStorage.getItem('nomUserSelf') || '';
+    const nom   = localStorage.getItem('nomUserSelf') || '';
     if (!nom) { ouvrirModale(); return; }
-
     const heure = document.getElementById('heure_retrait').value;
     const menu  = document.querySelector('input[name="choix_menu"]:checked');
     if (!menu) { alert('Veuillez choisir un menu.'); return; }
-    if (!dateSelectionneeISO) { alert('Veuillez choisir un jour.'); return; }
 
-    const mode = document.querySelector('input[name="mode_retrait"]:checked').value;
     localStorage.setItem('heureUserSelf', heure);
+    mettreAJourGreeting(nom);
+    const btn     = document.getElementById('btn-submit');
+    const btnText = document.getElementById('btn-submit-text');
+    const errEl   = document.getElementById('msg-erreur');
+    btn.disabled  = true;
+    btnText.textContent = 'Envoi en cours…';
+    errEl.style.display = 'none';
 
-    const menus   = menusDuServeur[dateSelectionneeISO] || {};
-    const isA     = menu.value === 'Menu A';
-    const nomPlat = (isA ? menus.A : menus.B) || menu.value;
+    const donnees = {
+        action: "enregistrerCommande",
+        date:   dateSelectionneeISO,
+        nom:    nom,
+        menu:   menu.value,
+        mode:   document.querySelector('input[name="mode_retrait"]:checked').value,
+        heure:  heure
+    };
 
-    // Remplacer une éventuelle entrée existante pour ce jour dans le panier
-    panier = panier.filter(p => p.date !== dateSelectionneeISO);
-    panier.push({ date: dateSelectionneeISO, menu: menu.value, mode, heure, nomPlat });
-    sauvegarderPanier();
-    mettreAJourPanierFlottant();
+    fetch(URL_SCRIPT_GOOGLE, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(donnees)
+    })
+    .then(() => {
+        // Mettre à jour le cache local
+        toutesInscriptions = toutesInscriptions.filter(c => {
+            const d = (c.date||'').toString().replace(/'/g,'').trim();
+            return !(d === dateSelectionneeISO && nomNormalise(c.nom) === nomNormalise(nom));
+        });
+        toutesInscriptions.push({ date: dateSelectionneeISO, nom, menu: menu.value, mode: donnees.mode, heure });
 
-    // Feedback visuel léger
-    const toast = document.getElementById('toast-ajout-panier');
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 2200);
-
-    // Réinitialiser la sélection du jour pour permettre d'en choisir un autre
-    setTimeout(() => {
-        document.querySelectorAll('.btn-jour').forEach(b => b.classList.remove('actif'));
-        document.getElementById('form-commande').classList.add('hidden');
-        document.getElementById('verif-doublon').classList.remove('visible');
-        dateSelectionneeISO = '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 600);
+        afficherConfirmation(donnees);
+        btn.disabled = false;
+        btnText.textContent = 'Confirmer la commande';
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btnText.textContent = 'Confirmer la commande';
+        errEl.style.display = 'block';
+    });
 });
 
-// ─── GESTION DU PANIER ─────────────────────────────────────────────────────────
-function sauvegarderPanier() {
-    sessionStorage.setItem('panierSelf', JSON.stringify(panier));
-}
-function chargerPanierDepuisStockage() {
-    try {
-        const data = JSON.parse(sessionStorage.getItem('panierSelf') || '[]');
-        if (Array.isArray(data)) panier = data;
-    } catch(e) { panier = []; }
-}
-
-function mettreAJourPanierFlottant() {
-    const flottant = document.getElementById('panier-flottant');
-    const badge    = document.getElementById('panier-flottant-badge');
-    if (panier.length === 0) {
-        flottant.classList.add('hidden');
-    } else {
-        flottant.classList.remove('hidden');
-        badge.textContent = panier.length;
-    }
-}
-
-function ouvrirPanier() {
-    afficherContenuPanier();
-    document.getElementById('ecran-panier').classList.remove('hidden');
-}
-function fermerPanier() {
-    document.getElementById('ecran-panier').classList.add('hidden');
-}
-
-function retirerDuPanier(date) {
-    panier = panier.filter(p => p.date !== date);
-    sauvegarderPanier();
-    mettreAJourPanierFlottant();
-    afficherContenuPanier();
-}
-
-function afficherContenuPanier() {
-    const zone = document.getElementById('contenu-panier');
-    if (panier.length === 0) {
-        zone.innerHTML = `<div class="ecran-panier-vide"><span>🛒</span>Votre panier est vide.<br>Sélectionnez un jour pour ajouter une réservation.</div>`;
-        return;
-    }
-    const trie = [...panier].sort((a,b) => a.date.localeCompare(b.date));
-    zone.innerHTML = trie.map(p => `
-        <div class="panier-item-jour">
-            <div class="pij-header">
-                <div class="pij-date">📅 ${formaterDateLong(p.date)}</div>
-                <button class="pij-retirer" onclick="retirerDuPanier('${p.date}')" title="Retirer">✕</button>
-            </div>
-            <div class="pij-detail">${p.menu === 'Menu A' ? '🍖' : '🌿'} ${p.menu} · ${p.nomPlat}</div>
-            <div class="pij-detail">${p.mode === 'Sur place' ? '🍽️' : '🛍️'} ${p.mode} · 🕐 ${p.heure}</div>
-        </div>
-    `).join('') + `
-        <div class="recap-panier-total">
-            <span class="rpt-label">Total</span>
-            <span class="rpt-val">${panier.length} repas</span>
-        </div>
-        <button class="btn-submit" id="btn-valider-panier" onclick="validerPanier()" style="margin-bottom:8px;">
-            <span>✅</span> Valider mes ${panier.length} réservation${panier.length>1?'s':''}
-        </button>
-        <div id="msg-erreur-panier" class="msg-erreur" style="display:none;"></div>
+function afficherConfirmation(d) {
+    document.getElementById('recap-commande').innerHTML = `
+        <div class="recap-ligne"><span class="recap-label">📅 Date</span><span class="recap-val">${formaterDateLong(d.date)}</span></div>
+        <div class="recap-ligne"><span class="recap-label">🍽️ Menu</span><span class="recap-val">${d.menu}</span></div>
+        <div class="recap-ligne"><span class="recap-label">📍 Mode</span><span class="recap-val">${d.mode}</span></div>
+        <div class="recap-ligne"><span class="recap-label">🕐 Heure</span><span class="recap-val">${d.heure}</span></div>
+        <div class="recap-ligne"><span class="recap-label">👤 Nom</span><span class="recap-val">${d.nom}</span></div>
     `;
+    document.getElementById('form-commande').classList.add('hidden');
+    document.getElementById('ecran-confirmation').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function validerPanier() {
-    const nom = localStorage.getItem('nomUserSelf') || '';
-    if (!nom || panier.length === 0) return;
+function nouvelleReservation() {
+    document.getElementById('ecran-confirmation').classList.add('hidden');
+    document.getElementById('form-commande').reset();
+    document.querySelectorAll('.btn-jour').forEach(b => b.classList.remove('actif'));
+    document.getElementById('form-commande').classList.add('hidden');
+    document.getElementById('verif-doublon').classList.remove('visible');
+    dateSelectionneeISO = '';
 
-    const btn = document.getElementById('btn-valider-panier');
-    const err = document.getElementById('msg-erreur-panier');
-    btn.disabled = true;
-    btn.innerHTML = '<span>⏳</span> Envoi en cours…';
-    err.style.display = 'none';
-
-    const envois = panier.map(p => fetch(URL_SCRIPT_GOOGLE, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ action: 'enregistrerCommande', date: p.date, nom, menu: p.menu, mode: p.mode, heure: p.heure })
-    }));
-
-    Promise.all(envois).then(() => {
-        // Mettre à jour le cache local des inscriptions
-        panier.forEach(p => {
-            toutesInscriptions = toutesInscriptions.filter(c => {
-                const d = (c.date||'').toString().replace(/'/g,'').trim();
-                return !(d === p.date && nomNormalise(c.nom) === nomNormalise(nom));
-            });
-            toutesInscriptions.push({ date: p.date, nom, menu: p.menu, mode: p.mode, heure: p.heure });
-        });
-
-        afficherConfirmationPanier(panier.length);
-        panier = [];
-        sauvegarderPanier();
-        mettreAJourPanierFlottant();
-    }).catch(() => {
-        btn.disabled = false;
-        btn.innerHTML = `<span>✅</span> Valider mes ${panier.length} réservation${panier.length>1?'s':''}`;
-        err.textContent = '⚠️ Erreur de connexion. Vérifiez votre accès réseau et réessayez.';
-        err.style.display = 'block';
-    });
-}
-
-function afficherConfirmationPanier(nbRepas) {
-    document.getElementById('contenu-panier').innerHTML = `
-        <div class="ecran-confirmation">
-            <div class="confetti-wrap">✅</div>
-            <div class="conf-titre">${nbRepas} réservation${nbRepas>1?'s':''} enregistrée${nbRepas>1?'s':''} !</div>
-            <p class="conf-sub">À tout à l'heure au self 🍽️</p>
-            <button class="btn-nouvelle-resa" onclick="fermerPanier()">Fermer</button>
-        </div>
-    `;
+    const heure = localStorage.getItem('heureUserSelf');
+    if (heure) document.getElementById('heure_retrait').value = heure;
 }
 
 // ─── MES RÉSERVATIONS ─────────────────────────────────────────────────────────
@@ -1010,9 +856,6 @@ function mettreAJourGreeting(nom) {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-    chargerPanierDepuisStockage();
-    mettreAJourPanierFlottant();
-
     const nomSave   = localStorage.getItem('nomUserSelf');
     const heureSave = localStorage.getItem('heureUserSelf');
     if (nomSave) {
