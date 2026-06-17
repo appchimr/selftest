@@ -87,6 +87,10 @@
         /* ─── SECTION MENUS ─── */
         .semaine-titre { font-size: 13px; font-weight: 700; color: var(--blue-text); background: var(--blue-bg); padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 18px; text-align: center; }
         .jour-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .emporter-group { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 10px 12px; margin-top: 8px; margin-bottom: 12px; }
+        .emporter-label { color: var(--blue-text) !important; }
+        .emporter-tag { font-size: 9px; font-weight: 600; color: var(--blue); text-transform: none; opacity: 0.7; margin-left: 4px; }
+        .emporter-group input { background: var(--white); }
         @media (max-width: 600px) { .jour-grid { grid-template-columns: 1fr; } }
         .jour-bloc { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
         .jour-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
@@ -414,6 +418,10 @@ function genererInterfaceMenus() {
                     <input type="checkbox" id="chg-A-${cle}" ${menu.alerteA ? 'checked' : ''}
                         onchange="this.closest('.changement-wrap').style.opacity = this.checked ? '1' : '0.5'">
                 </div>
+                <div class="input-group emporter-group">
+                    <div class="input-label emporter-label">🛍️ Menu A à emporter <span class="emporter-tag">si différent</span></div>
+                    <input type="text" id="a-emporter-${cle}" value="${menu.A_emporter||''}" placeholder="Laisser vide = identique au menu sur place">
+                </div>
 
                 <div class="input-group" style="margin-top:12px;">
                     <div class="input-label"><span style="color:#047857;">🌿</span> Menu B – Intitulé du plat</div>
@@ -436,6 +444,10 @@ function genererInterfaceMenus() {
                     <label class="changement-label" for="chg-B-${cle}">⚠️ Alerter les inscrits du Menu B</label>
                     <input type="checkbox" id="chg-B-${cle}" ${menu.alerteB ? 'checked' : ''}
                         onchange="this.closest('.changement-wrap').style.opacity = this.checked ? '1' : '0.5'">
+                </div>
+                <div class="input-group emporter-group">
+                    <div class="input-label emporter-label">🛍️ Menu B à emporter <span class="emporter-tag">si différent</span></div>
+                    <input type="text" id="b-emporter-${cle}" value="${menu.B_emporter||''}" placeholder="Laisser vide = identique au menu sur place">
                 </div>
             </div>
         `;
@@ -498,6 +510,8 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
             date:    cle,
             menuA:   ferme ? '' : (document.getElementById('a-'+cle)?.value || ''),
             menuB:   ferme ? '' : (document.getElementById('b-'+cle)?.value || ''),
+            menuAEmporter: ferme ? '' : (document.getElementById('a-emporter-'+cle)?.value || ''),
+            menuBEmporter: ferme ? '' : (document.getElementById('b-emporter-'+cle)?.value || ''),
             ferme:   ferme,
             limiteA: (chkA && valLimA) ? parseInt(valLimA) : null,
             limiteB: (chkB && valLimB) ? parseInt(valLimB) : null,
@@ -511,7 +525,7 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         body: new URLSearchParams({ action: "enregistrerMenus", donnees: JSON.stringify(paquets) })
     }).then(() => {
         paquets.forEach(p => {
-            menusServeurComplets[p.date] = { A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB, alerteA: p.alerteA, alerteB: p.alerteB };
+            menusServeurComplets[p.date] = { A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB, alerteA: p.alerteA, alerteB: p.alerteB, A_emporter: p.menuAEmporter, B_emporter: p.menuBEmporter };
             // Mettre à jour les data-original pour que la prochaine modif se compare au nouveau menu
             const inputA = document.getElementById('a-'+p.date);
             const inputB = document.getElementById('b-'+p.date);

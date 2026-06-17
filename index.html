@@ -273,7 +273,17 @@
                 </div>
 
                 <div>
-                    <div class="section-label">1 · Votre assiette</div>
+                    <div class="section-label">1 · Où mangez-vous ?</div>
+                    <div class="segmented">
+                        <input type="radio" id="retrait-place" name="mode_retrait" value="Sur place" checked onchange="actualiserLibellesMenu()">
+                        <label for="retrait-place">🍽️ Sur place</label>
+                        <input type="radio" id="retrait-emporter" name="mode_retrait" value="À emporter" onchange="actualiserLibellesMenu()">
+                        <label for="retrait-emporter">🛍️ À emporter</label>
+                    </div>
+                </div>
+
+                <div class="section-gap">
+                    <div class="section-label">2 · Votre assiette</div>
 
                     <div class="card-menu-wrap">
                         <input type="radio" id="menuA" name="choix_menu" value="Menu A" class="card-menu-input" required>
@@ -297,16 +307,6 @@
                             </div>
                             <div class="radio-custom"><div class="radio-dot"></div></div>
                         </label>
-                    </div>
-                </div>
-
-                <div class="section-gap">
-                    <div class="section-label">2 · Où mangez-vous ?</div>
-                    <div class="segmented">
-                        <input type="radio" id="retrait-place" name="mode_retrait" value="Sur place" checked>
-                        <label for="retrait-place">🍽️ Sur place</label>
-                        <input type="radio" id="retrait-emporter" name="mode_retrait" value="À emporter">
-                        <label for="retrait-emporter">🛍️ À emporter</label>
                     </div>
                 </div>
 
@@ -368,6 +368,7 @@ const MOIS_LONG  = ["janvier","février","mars","avril","mai","juin","juillet","
 let dateSelectionneeISO = "";
 let menusDuServeur      = {};   // { "2026-06-16": { A:"...", B:"...", limiteA: null, limiteB: 20 }, ... }
 let toutesInscriptions  = [];   // cache chargé une seule fois par session
+let menusJourSelectionne = {};  // menus du jour actuellement sélectionné (pour adapter selon le mode)
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 function dateLocal(d) {
@@ -435,7 +436,10 @@ function verifierAlertesChangement() {
         const d     = (c.date||'').toString().replace(/'/g,'').trim();
         const menus = menusDuServeur[d] || {};
         const isA   = c.menu === 'Menu A';
-        const nomPlat = (isA ? menus.A : menus.B) || c.menu;
+        const estEmporter = c.mode === 'À emporter';
+        const nomPlat = isA
+            ? ((estEmporter && menus.A_emporter) ? menus.A_emporter : (menus.A || c.menu))
+            : ((estEmporter && menus.B_emporter) ? menus.B_emporter : (menus.B || c.menu));
         const dateStr = formaterDateLong(d);
         const idAlerte = 'ch-' + d;
 
@@ -562,19 +566,10 @@ function selectionnerJour(btnEl, cle, menus) {
     document.querySelectorAll('.btn-jour').forEach(b => b.classList.remove('actif'));
     btnEl.classList.add('actif');
     dateSelectionneeISO = cle;
+    menusJourSelectionne = menus;
 
-    // Menus A et B
-    const nomA   = menus.A || "Menu à venir";
-    const nomB   = menus.B || "Menu à venir";
-    const limA   = menus.limiteA != null ? parseInt(menus.limiteA) : null;
-    const limB   = menus.limiteB != null ? parseInt(menus.limiteB) : null;
-
-    document.getElementById('label-menu-a').textContent = nomA;
-    document.getElementById('label-menu-b').textContent = nomB;
-
-    // Gestion des limites de stock
-    gererLimiteMenu('A', limA, cle, menus);
-    gererLimiteMenu('B', limB, cle, menus);
+    // Afficher les bons intitulés selon le mode de retrait actuellement choisi
+    actualiserLibellesMenu();
 
     // Réinitialiser radio si menu sélectionné est épuisé
     document.querySelectorAll('input[name="choix_menu"]').forEach(r => r.checked = false);
@@ -585,6 +580,27 @@ function selectionnerJour(btnEl, cle, menus) {
 
     // Vérifier doublon
     verifierDoublon();
+}
+
+// ─── ADAPTATION DES INTITULÉS SELON LE MODE (sur place / à emporter) ──────────
+function actualiserLibellesMenu() {
+    if (!dateSelectionneeISO) return;
+    const menus = menusJourSelectionne || {};
+    const modeRadio = document.querySelector('input[name="mode_retrait"]:checked');
+    const emporter = modeRadio && modeRadio.value === 'À emporter';
+
+    // Fallback automatique : si pas d'intitulé spécifique à emporter, on retombe sur le menu sur place
+    const nomA = (emporter && menus.A_emporter) ? menus.A_emporter : (menus.A || "Menu à venir");
+    const nomB = (emporter && menus.B_emporter) ? menus.B_emporter : (menus.B || "Menu à venir");
+
+    document.getElementById('label-menu-a').textContent = nomA;
+    document.getElementById('label-menu-b').textContent = nomB;
+
+    // Gestion des limites de stock (toujours globale par lettre, indépendante du mode)
+    const limA = menus.limiteA != null ? parseInt(menus.limiteA) : null;
+    const limB = menus.limiteB != null ? parseInt(menus.limiteB) : null;
+    gererLimiteMenu('A', limA, dateSelectionneeISO, menus);
+    gererLimiteMenu('B', limB, dateSelectionneeISO, menus);
 }
 
 function gererLimiteMenu(lettre, limite, cle, menus) {
@@ -760,7 +776,10 @@ function chargerMesReservations() {
                     const isA = r.menu && r.menu.includes('A');
                     const dp  = (r.date||'').toString().replace(/'/g,'').trim();
                     const mj  = menusDuServeur[dp] || {};
-                    const pl  = isA ? (mj.A||'') : (mj.B||'');
+                    const estEmporter = r.mode === 'À emporter';
+                    const pl  = isA
+                        ? ((estEmporter && mj.A_emporter) ? mj.A_emporter : (mj.A||''))
+                        : ((estEmporter && mj.B_emporter) ? mj.B_emporter : (mj.B||''));
                     return `<div class="resa-item" id="resa-${dp}">
                         <div class="resa-header">
                             <div class="resa-date">${formaterDateLong(r.date)}</div>
