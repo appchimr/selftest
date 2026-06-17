@@ -607,21 +607,21 @@ function actualiserLibellesMenu() {
     const modeRadio = document.querySelector('input[name="mode_retrait"]:checked');
     const emporter = modeRadio && modeRadio.value === 'À emporter';
 
-    // Fallback automatique : si pas d'intitulé spécifique à emporter, on retombe sur le menu sur place
-    const nomA = (emporter && menus.A_emporter) ? menus.A_emporter : (menus.A || "Menu à venir");
-    const nomB = (emporter && menus.B_emporter) ? menus.B_emporter : (menus.B || "Menu à venir");
+    // Menus sur place et à emporter sont totalement indépendants : pas de fallback
+    const nomA = emporter ? (menus.A_emporter || '') : (menus.A || '');
+    const nomB = emporter ? (menus.B_emporter || '') : (menus.B || '');
 
-    document.getElementById('label-menu-a').textContent = nomA;
-    document.getElementById('label-menu-b').textContent = nomB;
+    document.getElementById('label-menu-a').textContent = nomA || (emporter ? 'Non disponible à emporter' : 'Menu à venir');
+    document.getElementById('label-menu-b').textContent = nomB || (emporter ? 'Non disponible à emporter' : 'Menu à venir');
 
     // Gestion des limites de stock (toujours globale par lettre, indépendante du mode)
     const limA = menus.limiteA != null ? parseInt(menus.limiteA) : null;
     const limB = menus.limiteB != null ? parseInt(menus.limiteB) : null;
-    gererLimiteMenu('A', limA, dateSelectionneeISO, menus);
-    gererLimiteMenu('B', limB, dateSelectionneeISO, menus);
+    gererLimiteMenu('A', limA, dateSelectionneeISO, menus, !nomA);
+    gererLimiteMenu('B', limB, dateSelectionneeISO, menus, !nomB);
 }
 
-function gererLimiteMenu(lettre, limite, cle, menus) {
+function gererLimiteMenu(lettre, limite, cle, menus, indisponible) {
     const cardId  = 'card-' + lettre.toLowerCase();
     const inputId = 'menu' + lettre;
     const card    = document.getElementById(cardId);
@@ -629,6 +629,17 @@ function gererLimiteMenu(lettre, limite, cle, menus) {
 
     // Supprimer badge stock précédent
     card.querySelectorAll('.stock-badge').forEach(el => el.remove());
+
+    // Menu non renseigné pour ce mode : non disponible, prioritaire sur la limite de stock
+    if (indisponible) {
+        const badge = document.createElement('div');
+        badge.className = 'stock-badge';
+        badge.textContent = '🚫 Non disponible dans ce mode';
+        card.classList.add('epuise');
+        input.disabled = true;
+        card.querySelector('.content').appendChild(badge);
+        return;
+    }
 
     if (limite === null) {
         card.classList.remove('epuise');
