@@ -427,8 +427,13 @@ function verifierAlertesChangement() {
         if (d < auj) return false; // passé
         if (nomNormalise(c.nom) !== nomNormalise(nom)) return false;
         const menus = menusDuServeur[d] || {};
-        const flagA = menus.alerteA === true || menus.alerteA === 'true';
-        const flagB = menus.alerteB === true || menus.alerteB === 'true';
+        const estEmporter = c.mode === 'À emporter';
+        const flagA = estEmporter
+            ? (menus.alerteA_emporter === true || menus.alerteA_emporter === 'true')
+            : (menus.alerteA === true || menus.alerteA === 'true');
+        const flagB = estEmporter
+            ? (menus.alerteB_emporter === true || menus.alerteB_emporter === 'true')
+            : (menus.alerteB === true || menus.alerteB === 'true');
         return (c.menu === 'Menu A' && flagA) || (c.menu === 'Menu B' && flagB);
     });
 
@@ -455,10 +460,10 @@ function verifierAlertesChangement() {
                 </div>
             </div>
             <div class="alerte-ch-btns">
-                <button class="btn-ch-confirmer" onclick="confirmerChangement('${d}','${nom}','${idAlerte}')">✅ Je confirme ce nouveau menu</button>
+                <button class="btn-ch-confirmer" onclick="confirmerChangement('${d}','${nom}','${idAlerte}','${c.mode}')">✅ Je confirme ce nouveau menu</button>
                 <div class="btn-ch-secondaire">
                     <button class="btn-ch-changer" onclick="allerChangerMenu('${d}')">🔄 Changer de menu</button>
-                    <button class="btn-ch-annuler" onclick="annulerDepuisAlerte('${d}','${nom}','${idAlerte}')">🗑️ Annuler mon repas</button>
+                    <button class="btn-ch-annuler" onclick="annulerDepuisAlerte('${d}','${nom}','${idAlerte}','${c.mode}')">🗑️ Annuler mon repas</button>
                 </div>
             </div>
         `;
@@ -466,20 +471,25 @@ function verifierAlertesChangement() {
     });
 }
 
-function confirmerChangement(date, nom, idAlerte) {
+function confirmerChangement(date, nom, idAlerte, mode) {
     const btn = document.querySelector(`#${idAlerte} .btn-ch-confirmer`);
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
-    // 1. Acquitter le flag alerte côté serveur
+    // 1. Acquitter le flag alerte côté serveur (uniquement pour le mode concerné)
     fetch(URL_SCRIPT_GOOGLE, {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ action: 'acquitterAlerte', date })
+        body: new URLSearchParams({ action: 'acquitterAlerte', date, mode })
     }).then(() => {
         // 2. Mettre à jour le cache local
         if (menusDuServeur[date]) {
-            menusDuServeur[date].alerteA = false;
-            menusDuServeur[date].alerteB = false;
+            if (mode === 'À emporter') {
+                menusDuServeur[date].alerteA_emporter = false;
+                menusDuServeur[date].alerteB_emporter = false;
+            } else {
+                menusDuServeur[date].alerteA = false;
+                menusDuServeur[date].alerteB = false;
+            }
         }
         // 3. Supprimer la bannière
         const el = document.getElementById(idAlerte);
@@ -500,9 +510,9 @@ function allerChangerMenu(date) {
     // Masquer l'alerte temporairement (elle disparaîtra après confirmation)
 }
 
-function annulerDepuisAlerte(date, nom, idAlerte) {
+function annulerDepuisAlerte(date, nom, idAlerte, mode) {
     if (!confirm(`Confirmer l'annulation du repas du ${formaterDateLong(date)} ?`)) return;
-    // Annuler la réservation ET acquitter l'alerte
+    // Annuler la réservation ET acquitter l'alerte du mode concerné
     Promise.all([
         fetch(URL_SCRIPT_GOOGLE, {
             method: 'POST', mode: 'no-cors',
@@ -512,14 +522,22 @@ function annulerDepuisAlerte(date, nom, idAlerte) {
         fetch(URL_SCRIPT_GOOGLE, {
             method: 'POST', mode: 'no-cors',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ action: 'acquitterAlerte', date })
+            body: new URLSearchParams({ action: 'acquitterAlerte', date, mode })
         })
     ]).then(() => {
         toutesInscriptions = toutesInscriptions.filter(c => {
             const d = (c.date||'').toString().replace(/'/g,'').trim();
             return !(d === date && nomNormalise(c.nom) === nomNormalise(nom));
         });
-        if (menusDuServeur[date]) { menusDuServeur[date].alerteA = false; menusDuServeur[date].alerteB = false; }
+        if (menusDuServeur[date]) {
+            if (mode === 'À emporter') {
+                menusDuServeur[date].alerteA_emporter = false;
+                menusDuServeur[date].alerteB_emporter = false;
+            } else {
+                menusDuServeur[date].alerteA = false;
+                menusDuServeur[date].alerteB = false;
+            }
+        }
         const el = document.getElementById(idAlerte);
         if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }
     }).catch(() => alert('Erreur réseau. Réessayez.'));

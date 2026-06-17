@@ -401,6 +401,61 @@ function genererInterfaceMenus() {
             <div id="champs-${cle}" ${ferme ? 'style="opacity:.35;pointer-events:none;"' : ''}>
                 <div class="colonnes-mode">
 
+                    <!-- ═══ COLONNE À EMPORTER ═══ -->
+                    <div class="colonne-mode emporter">
+                        <div class="colonne-mode-titre">🛍️ À emporter <span class="emporter-tag">si différent</span></div>
+
+                        <div class="menu-bloc-admin">
+                            <div class="input-group">
+                                <div class="input-label"><span style="color:#b45309;">🍖</span> Menu A</div>
+                                <input type="text" id="a-emporter-${cle}" value="${menu.A_emporter||''}" placeholder="Identique au menu sur place"
+                                    data-original="${(menu.A_emporter||'').replace(/"/g,'&quot;')}"
+                                    onblur="detecterChangement('A','${cle}', true)">
+                            </div>
+                            <div class="ligne-options">
+                                <div class="opt-limite">
+                                    <input type="checkbox" id="chk-limA-emporter-${cle}" ${menu.limiteA != null ? 'checked' : ''} onchange="toggleLimite('A','${cle}', true)">
+                                    <label for="chk-limA-emporter-${cle}" title="Limiter le nombre de portions (stock partagé avec sur place)">Limiter</label>
+                                    <input type="number" id="limA-emporter-${cle}" class="limite-input-inline" min="1" max="999"
+                                        value="${menu.limiteA != null ? menu.limiteA : ''}"
+                                        placeholder="nb"
+                                        ${menu.limiteA != null ? '' : 'disabled'}
+                                        onchange="syncLimite('A','${cle}', true)">
+                                </div>
+                                <div class="opt-alerte" id="alerte-A-emporter-${cle}">
+                                    <input type="checkbox" id="chg-A-emporter-${cle}" ${menu.alerteA_emporter ? 'checked' : ''}
+                                        onchange="this.closest('.opt-alerte').classList.toggle('actif', this.checked)">
+                                    <label for="chg-A-emporter-${cle}" title="Alerter les inscrits à emporter si ce plat change">⚠️ Alerter</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="menu-bloc-admin">
+                            <div class="input-group">
+                                <div class="input-label"><span style="color:#047857;">🌿</span> Menu B</div>
+                                <input type="text" id="b-emporter-${cle}" value="${menu.B_emporter||''}" placeholder="Identique au menu sur place"
+                                    data-original="${(menu.B_emporter||'').replace(/"/g,'&quot;')}"
+                                    onblur="detecterChangement('B','${cle}', true)">
+                            </div>
+                            <div class="ligne-options">
+                                <div class="opt-limite">
+                                    <input type="checkbox" id="chk-limB-emporter-${cle}" ${menu.limiteB != null ? 'checked' : ''} onchange="toggleLimite('B','${cle}', true)">
+                                    <label for="chk-limB-emporter-${cle}" title="Limiter le nombre de portions (stock partagé avec sur place)">Limiter</label>
+                                    <input type="number" id="limB-emporter-${cle}" class="limite-input-inline" min="1" max="999"
+                                        value="${menu.limiteB != null ? menu.limiteB : ''}"
+                                        placeholder="nb"
+                                        ${menu.limiteB != null ? '' : 'disabled'}
+                                        onchange="syncLimite('B','${cle}', true)">
+                                </div>
+                                <div class="opt-alerte" id="alerte-B-emporter-${cle}">
+                                    <input type="checkbox" id="chg-B-emporter-${cle}" ${menu.alerteB_emporter ? 'checked' : ''}
+                                        onchange="this.closest('.opt-alerte').classList.toggle('actif', this.checked)">
+                                    <label for="chg-B-emporter-${cle}" title="Alerter les inscrits à emporter si ce plat change">⚠️ Alerter</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- ═══ COLONNE SUR PLACE ═══ -->
                     <div class="colonne-mode">
                         <div class="colonne-mode-titre">🍽️ Sur place</div>
@@ -419,12 +474,13 @@ function genererInterfaceMenus() {
                                     <input type="number" id="limA-${cle}" class="limite-input-inline" min="1" max="999"
                                         value="${menu.limiteA != null ? menu.limiteA : ''}"
                                         placeholder="nb"
-                                        ${menu.limiteA != null ? '' : 'disabled'}>
+                                        ${menu.limiteA != null ? '' : 'disabled'}
+                                        onchange="syncLimite('A','${cle}')">
                                 </div>
-                                <div class="opt-alerte" id="alerte-A-${cle}" style="${menu.alerteA ? '' : ''}">
+                                <div class="opt-alerte" id="alerte-A-${cle}">
                                     <input type="checkbox" id="chg-A-${cle}" ${menu.alerteA ? 'checked' : ''}
                                         onchange="this.closest('.opt-alerte').classList.toggle('actif', this.checked)">
-                                    <label for="chg-A-${cle}" title="Alerter les inscrits si ce plat change">⚠️ Alerter</label>
+                                    <label for="chg-A-${cle}" title="Alerter les inscrits sur place si ce plat change">⚠️ Alerter</label>
                                 </div>
                             </div>
                         </div>
@@ -443,32 +499,14 @@ function genererInterfaceMenus() {
                                     <input type="number" id="limB-${cle}" class="limite-input-inline" min="1" max="999"
                                         value="${menu.limiteB != null ? menu.limiteB : ''}"
                                         placeholder="nb"
-                                        ${menu.limiteB != null ? '' : 'disabled'}>
+                                        ${menu.limiteB != null ? '' : 'disabled'}
+                                        onchange="syncLimite('B','${cle}')">
                                 </div>
                                 <div class="opt-alerte" id="alerte-B-${cle}">
                                     <input type="checkbox" id="chg-B-${cle}" ${menu.alerteB ? 'checked' : ''}
                                         onchange="this.closest('.opt-alerte').classList.toggle('actif', this.checked)">
-                                    <label for="chg-B-${cle}" title="Alerter les inscrits si ce plat change">⚠️ Alerter</label>
+                                    <label for="chg-B-${cle}" title="Alerter les inscrits sur place si ce plat change">⚠️ Alerter</label>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ═══ COLONNE À EMPORTER ═══ -->
-                    <div class="colonne-mode emporter">
-                        <div class="colonne-mode-titre">🛍️ À emporter <span class="emporter-tag">si différent</span></div>
-
-                        <div class="menu-bloc-admin">
-                            <div class="input-group">
-                                <div class="input-label"><span style="color:#b45309;">🍖</span> Menu A</div>
-                                <input type="text" id="a-emporter-${cle}" value="${menu.A_emporter||''}" placeholder="Identique au menu sur place">
-                            </div>
-                        </div>
-
-                        <div class="menu-bloc-admin">
-                            <div class="input-group">
-                                <div class="input-label"><span style="color:#047857;">🌿</span> Menu B</div>
-                                <input type="text" id="b-emporter-${cle}" value="${menu.B_emporter||''}" placeholder="Identique au menu sur place">
                             </div>
                         </div>
                     </div>
@@ -485,12 +523,13 @@ function genererInterfaceMenus() {
     });
 }
 
-function detecterChangement(lettre, cle) {
-    const input          = document.getElementById(`${lettre.toLowerCase()}-${cle}`);
+function detecterChangement(lettre, cle, depuisEmporter) {
+    const suffixe        = depuisEmporter ? '-emporter' : '';
+    const input          = document.getElementById(`${lettre.toLowerCase()}${suffixe}-${cle}`);
     const ancienneValeur = input.getAttribute('data-original') || '';
     const nouvelleValeur = input.value.trim();
-    const checkbox       = document.getElementById(`chg-${lettre}-${cle}`);
-    const wrap           = document.getElementById(`alerte-${lettre}-${cle}`);
+    const checkbox       = document.getElementById(`chg-${lettre}${suffixe}-${cle}`);
+    const wrap           = document.getElementById(`alerte-${lettre}${suffixe}-${cle}`);
     // Si le plat était déjà publié et a réellement changé, cocher automatiquement l'alerte (suggestion)
     if (ancienneValeur && nouvelleValeur && nouvelleValeur !== ancienneValeur) {
         checkbox.checked = true;
@@ -505,12 +544,33 @@ function toggleFerme(cle) {
     champs.style.pointerEvents  = checked ? 'none' : '';
 }
 
-function toggleLimite(lettre, cle) {
-    const checked = document.getElementById(`chk-lim${lettre}-${cle}`).checked;
-    const input   = document.getElementById(`lim${lettre}-${cle}`);
+function toggleLimite(lettre, cle, depuisEmporter) {
+    const suffixe   = depuisEmporter ? '-emporter' : '';
+    const suffixeOp = depuisEmporter ? '' : '-emporter';
+    const checked   = document.getElementById(`chk-lim${lettre}${suffixe}-${cle}`).checked;
+    const input     = document.getElementById(`lim${lettre}${suffixe}-${cle}`);
+    const chkOp     = document.getElementById(`chk-lim${lettre}${suffixeOp}-${cle}`);
+    const inputOp   = document.getElementById(`lim${lettre}${suffixeOp}-${cle}`);
+
     input.disabled = !checked;
-    if (!checked) input.value = '';
-    else { input.focus(); input.value = input.value || ''; }
+    if (!checked) { input.value = ''; }
+    else { input.focus(); }
+
+    // Synchroniser l'autre colonne (stock global partagé par lettre de menu)
+    if (chkOp) chkOp.checked = checked;
+    if (inputOp) {
+        inputOp.disabled = !checked;
+        if (!checked) inputOp.value = '';
+        else inputOp.value = input.value;
+    }
+}
+
+function syncLimite(lettre, cle, depuisEmporter) {
+    const suffixe   = depuisEmporter ? '-emporter' : '';
+    const suffixeOp = depuisEmporter ? '' : '-emporter';
+    const input   = document.getElementById(`lim${lettre}${suffixe}-${cle}`);
+    const inputOp = document.getElementById(`lim${lettre}${suffixeOp}-${cle}`);
+    if (inputOp) inputOp.value = input.value;
 }
 
 function afficherBanniere() {
@@ -536,6 +596,8 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         const valLimB = document.getElementById('limB-'+cle)?.value;
         const msgA   = document.getElementById('chg-A-'+cle)?.checked ?? false;
         const msgB   = document.getElementById('chg-B-'+cle)?.checked ?? false;
+        const msgAEmporter = document.getElementById('chg-A-emporter-'+cle)?.checked ?? false;
+        const msgBEmporter = document.getElementById('chg-B-emporter-'+cle)?.checked ?? false;
         paquets.push({
             date:    cle,
             menuA:   ferme ? '' : (document.getElementById('a-'+cle)?.value || ''),
@@ -547,6 +609,8 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
             limiteB: (chkB && valLimB) ? parseInt(valLimB) : null,
             alerteA: msgA ? true : false,
             alerteB: msgB ? true : false,
+            alerteAEmporter: msgAEmporter ? true : false,
+            alerteBEmporter: msgBEmporter ? true : false,
         });
     });
 
@@ -555,12 +619,21 @@ document.getElementById('form-admin').addEventListener('submit', function(e) {
         body: new URLSearchParams({ action: "enregistrerMenus", donnees: JSON.stringify(paquets) })
     }).then(() => {
         paquets.forEach(p => {
-            menusServeurComplets[p.date] = { A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB, alerteA: p.alerteA, alerteB: p.alerteB, A_emporter: p.menuAEmporter, B_emporter: p.menuBEmporter };
+            menusServeurComplets[p.date] = {
+                A: p.menuA, B: p.menuB, ferme: p.ferme, limiteA: p.limiteA, limiteB: p.limiteB,
+                alerteA: p.alerteA, alerteB: p.alerteB,
+                A_emporter: p.menuAEmporter, B_emporter: p.menuBEmporter,
+                alerteA_emporter: p.alerteAEmporter, alerteB_emporter: p.alerteBEmporter
+            };
             // Mettre à jour les data-original pour que la prochaine modif se compare au nouveau menu
             const inputA = document.getElementById('a-'+p.date);
             const inputB = document.getElementById('b-'+p.date);
+            const inputAEmp = document.getElementById('a-emporter-'+p.date);
+            const inputBEmp = document.getElementById('b-emporter-'+p.date);
             if (inputA) inputA.setAttribute('data-original', p.menuA);
             if (inputB) inputB.setAttribute('data-original', p.menuB);
+            if (inputAEmp) inputAEmp.setAttribute('data-original', p.menuAEmporter);
+            if (inputBEmp) inputBEmp.setAttribute('data-original', p.menuBEmporter);
         });
         btn.disabled = false;
         btnText.textContent = 'Publier les menus';
