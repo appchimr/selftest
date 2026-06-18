@@ -445,6 +445,15 @@ function verifierAlertesChangement() {
         const nomPlat = isA
             ? ((estEmporter && menus.A_emporter) ? menus.A_emporter : (menus.A || c.menu))
             : ((estEmporter && menus.B_emporter) ? menus.B_emporter : (menus.B || c.menu));
+
+        // Calculer l'autre menu disponible (indépendant entre sur place / à emporter)
+        const autreLettre = isA ? 'B' : 'A';
+        const autreMenuVal = isA ? 'Menu B' : 'Menu A';
+        const nomAutrePlat = estEmporter
+            ? (isA ? menus.B_emporter : menus.A_emporter)
+            : (isA ? menus.B : menus.A);
+        const autreDisponible = !!(nomAutrePlat && nomAutrePlat.trim());
+
         const dateStr = formaterDateLong(d);
         const idAlerte = 'ch-' + d;
 
@@ -460,9 +469,9 @@ function verifierAlertesChangement() {
                 </div>
             </div>
             <div class="alerte-ch-btns">
-                <button class="btn-ch-confirmer" onclick="confirmerChangement('${d}','${nom}','${idAlerte}','${c.mode}')">✅ Je confirme ce nouveau menu</button>
+                <button class="btn-ch-confirmer" onclick="confirmerChangement('${d}','${nom}','${idAlerte}','${c.mode}')">✅ Je garde ${c.menu} (${nomPlat})</button>
                 <div class="btn-ch-secondaire">
-                    <button class="btn-ch-changer" onclick="allerChangerMenu('${d}')">🔄 Changer de menu</button>
+                    ${autreDisponible ? `<button class="btn-ch-changer" onclick="basculerAutreMenu('${d}','${nom}','${idAlerte}','${c.mode}','${autreMenuVal}')">🔄 Prendre ${autreMenuVal} (${nomAutrePlat})</button>` : ''}
                     <button class="btn-ch-annuler" onclick="annulerDepuisAlerte('${d}','${nom}','${idAlerte}','${c.mode}')">🗑️ Annuler mon repas</button>
                 </div>
             </div>
@@ -500,14 +509,52 @@ function confirmerChangement(date, nom, idAlerte, mode) {
     });
 }
 
-function allerChangerMenu(date) {
-    // Aller sur l'onglet réserver et pré-sélectionner ce jour
-    afficherOnglet('reserver');
-    // Trouver et cliquer le bouton du bon jour
-    const btn = document.querySelector(`.btn-jour[data-cle="${date}"]`);
-    if (btn) btn.click();
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Masquer l'alerte temporairement (elle disparaîtra après confirmation)
+function basculerAutreMenu(date, nom, idAlerte, mode, nouveauMenu) {
+    const btn = document.querySelector(`#${idAlerte} .btn-ch-changer`);
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+    // Retrouver le mode et l'heure de la réservation existante pour les conserver
+    const resa = toutesInscriptions.find(c => {
+        const d = (c.date||'').toString().replace(/'/g,'').trim();
+        return d === date && nomNormalise(c.nom) === nomNormalise(nom);
+    });
+    const heure = resa ? resa.heure : '';
+
+    Promise.all([
+        fetch(URL_SCRIPT_GOOGLE, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ action: 'enregistrerCommande', date, nom, menu: nouveauMenu, mode, heure })
+        }),
+        fetch(URL_SCRIPT_GOOGLE, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ action: 'acquitterAlerte', date, mode })
+        })
+    ]).then(() => {
+        // Mettre à jour le cache local
+        toutesInscriptions = toutesInscriptions.filter(c => {
+            const d = (c.date||'').toString().replace(/'/g,'').trim();
+            return !(d === date && nomNormalise(c.nom) === nomNormalise(nom));
+        });
+        toutesInscriptions.push({ date, nom, menu: nouveauMenu, mode, heure });
+
+        if (menusDuServeur[date]) {
+            if (mode === 'À emporter') {
+                menusDuServeur[date].alerteA_emporter = false;
+                menusDuServeur[date].alerteB_emporter = false;
+            } else {
+                menusDuServeur[date].alerteA = false;
+                menusDuServeur[date].alerteB = false;
+            }
+        }
+
+        const el = document.getElementById(idAlerte);
+        if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }
+    }).catch(() => {
+        if (btn) { btn.disabled = false; btn.textContent = `🔄 Prendre ${nouveauMenu}`; }
+        alert('Erreur réseau. Réessayez.');
+    });
 }
 
 function annulerDepuisAlerte(date, nom, idAlerte, mode) {
