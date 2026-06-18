@@ -403,12 +403,12 @@ function genererInterfaceMenus() {
 
                     <!-- ═══ COLONNE À EMPORTER ═══ -->
                     <div class="colonne-mode emporter">
-                        <div class="colonne-mode-titre">🛍️ À emporter <span class="emporter-tag">si différent</span></div>
+                        <div class="colonne-mode-titre">🛍️ À emporter <span class="emporter-tag">vide = non proposé</span></div>
 
                         <div class="menu-bloc-admin">
                             <div class="input-group">
                                 <div class="input-label"><span style="color:#b45309;">🍖</span> Menu A</div>
-                                <input type="text" id="a-emporter-${cle}" value="${menu.A_emporter||''}" placeholder="Identique au menu sur place"
+                                <input type="text" id="a-emporter-${cle}" value="${menu.A_emporter||''}" placeholder="Laisser vide = non disponible à emporter"
                                     data-original="${(menu.A_emporter||'').replace(/"/g,'&quot;')}"
                                     onblur="detecterChangement('A','${cle}', true)">
                             </div>
@@ -433,7 +433,7 @@ function genererInterfaceMenus() {
                         <div class="menu-bloc-admin">
                             <div class="input-group">
                                 <div class="input-label"><span style="color:#047857;">🌿</span> Menu B</div>
-                                <input type="text" id="b-emporter-${cle}" value="${menu.B_emporter||''}" placeholder="Identique au menu sur place"
+                                <input type="text" id="b-emporter-${cle}" value="${menu.B_emporter||''}" placeholder="Laisser vide = non disponible à emporter"
                                     data-original="${(menu.B_emporter||'').replace(/"/g,'&quot;')}"
                                     onblur="detecterChangement('B','${cle}', true)">
                             </div>
