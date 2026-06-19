@@ -826,6 +826,7 @@ function chargerMesReservations() {
     .then(r => r.json())
     .then(data => {
         toutesInscriptions = data;
+        verifierAlertesChangement();
         const maintenant  = new Date();
         const minMaint    = maintenant.getHours() * 60 + maintenant.getMinutes();
         const auj         = dateLocal(maintenant);
