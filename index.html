@@ -907,7 +907,7 @@ async function attendreResultatOperation(requestId) {
     for (let tentative = 0; tentative < 30; tentative++) {
         const resultat = await apiGet('obtenirResultatOperation', { requestId });
         if (!resultat.pending) return resultat;
-        await new Promise(resolve => setTimeout(resolve, tentative < 3 ? 200 : 500));
+        await new Promise(resolve => setTimeout(resolve, tentative < 3 ? 150 : 400));
     }
     throw new Error("Le serveur n'a pas confirmé l'opération. Vérifiez les données avant de recommencer.");
 }
@@ -942,7 +942,6 @@ function envoyerParIframe(action, donnees, requestId) {
         const finir = (fonction, valeur) => {
             if (termine) return;
             termine = true;
-            clearTimeout(timeout);
             nettoyer();
             fonction(valeur);
         };
@@ -979,17 +978,21 @@ function envoyerParIframe(action, donnees, requestId) {
         document.body.appendChild(form);
         form.submit();
 
-        // Secours pour les navigateurs ou bloqueurs empêchant postMessage.
-        // On ne renvoie pas le POST : on relit seulement le résultat déjà enregistré.
-        const timeout = setTimeout(async () => {
-            if (termine) return;
+        // Le résultat est enregistré côté serveur dès que le POST est traité,
+        // avant même que la réponse ne parte. On sonde donc IMMÉDIATEMENT en
+        // parallèle de l'écoute postMessage, au lieu d'attendre 10 s qu'un
+        // éventuel blocage de postMessage (bloqueurs, restrictions du
+        // navigateur, politiques cross-origin) se révèle inutile. Le premier
+        // des deux chemins qui répond fait gagner la course ; l'autre est
+        // simplement ignoré grâce au verrou `termine`.
+        (async () => {
             try {
                 const resultat = await attendreResultatOperation(requestId);
                 finir(resolve, resultatOuErreur(resultat));
             } catch (erreur) {
                 finir(reject, erreur);
             }
-        }, 10000);
+        })();
     });
 }
 
