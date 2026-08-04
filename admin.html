@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#102a43">
     <title>Administration · Self CHIMR</title>
+    <!-- Version accès rapide : chargements administratifs parallélisés -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
     <style>
         :root {
@@ -749,9 +750,11 @@ async function apiGet(action, params = {}) {
 
 async function attendreResultatOperation(requestId) {
     for (let tentative = 0; tentative < 60; tentative++) {
-        await new Promise(resolve => setTimeout(resolve, tentative < 4 ? 300 : 500));
+        // Le POST no-cors est généralement déjà terminé quand fetch() rend la main :
+        // on tente donc immédiatement la lecture du résultat, sans attente artificielle.
         const resultat = await apiGet('obtenirResultatOperation', { requestId });
         if (!resultat.pending) return resultat;
+        await new Promise(resolve => setTimeout(resolve, tentative < 4 ? 180 : 450));
     }
     throw new Error("Le serveur n'a pas confirmé l'opération. Vérifiez les données avant de recommencer.");
 }
@@ -799,7 +802,12 @@ async function seConnecter() {
         document.getElementById('login-pwd').value = '';
         document.getElementById('ecran-login').style.display = 'none';
         document.getElementById('app-admin').style.display = 'block';
-        await initialiserAdmin();
+
+        // L'accès au tableau de bord est immédiat après validation du mot de passe.
+        // Les données du registre et des menus se chargent ensuite en parallèle.
+        bouton.disabled = false;
+        bouton.textContent = 'Accéder au tableau de bord';
+        initialiserAdmin();
     } catch (erreur) {
         erreurEl.textContent = `⚠️ ${erreur.message}`;
         erreurEl.style.display = 'block';
@@ -829,7 +837,7 @@ async function restaurerSessionAdmin() {
         await apiGet('verifierSessionAdmin', { token });
         document.getElementById('ecran-login').style.display = 'none';
         document.getElementById('app-admin').style.display = 'block';
-        await initialiserAdmin();
+        initialiserAdmin();
         return true;
     } catch (_) {
         sessionStorage.removeItem('admin_token');
@@ -839,11 +847,17 @@ async function restaurerSessionAdmin() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 async function initialiserAdmin() {
+    remplirSelecteurJours();
+
+    // Les deux lectures sont indépendantes : les lancer ensemble évite
+    // d'attendre deux allers-retours Apps Script successifs.
+    const menusPromise = apiGet('obtenirMenusAdmin', { token: tokenAdmin() });
+    const registrePromise = chargerJour();
+
     try {
-        const resultat = await apiGet('obtenirMenusAdmin', { token: tokenAdmin() });
-        menusServeurComplets = resultat.data || {};
-        remplirSelecteurJours();
-        await chargerJour();
+        const resultatMenus = await menusPromise;
+        menusServeurComplets = resultatMenus.data || {};
+        await registrePromise;
     } catch (erreur) {
         traiterErreurAdmin(erreur);
     }
