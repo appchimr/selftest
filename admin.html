@@ -199,7 +199,31 @@
             th, td { padding: 4px 6px; }
             .chk { display: none; }
         }
-    </style>
+    
+
+        /* ─── COMPTES UTILISATEURS ─── */
+        .comptes-top { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+        .comptes-title { font-size:18px; font-weight:850; letter-spacing:-.3px; }
+        .comptes-sub { max-width:620px; margin-top:4px; color:var(--slate); font-size:12px; line-height:1.5; }
+        .comptes-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+        .comptes-recherche-wrap { margin-bottom:14px; }
+        .comptes-recherche { width:100%; min-height:46px; padding:11px 14px; border:1.5px solid var(--border); border-radius:var(--radius-md); background:var(--white); color:var(--navy); font-size:14px; outline:none; }
+        .comptes-recherche:focus { border-color:var(--blue); box-shadow:0 0 0 4px rgba(2,132,199,.09); }
+        .compte-card { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center; padding:15px 16px; margin-bottom:10px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); }
+        .compte-card.inactif { opacity:.67; background:#f8fafc; }
+        .compte-nom { font-size:14px; font-weight:800; color:var(--navy); }
+        .compte-meta { margin-top:4px; color:var(--slate); font-size:11px; line-height:1.45; overflow-wrap:anywhere; }
+        .compte-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .compte-badge { padding:4px 8px; border-radius:999px; font-size:9px; font-weight:800; text-transform:uppercase; }
+        .compte-badge.ok { color:var(--green-text); background:var(--green-bg); }
+        .compte-badge.attente { color:var(--amber-text); background:var(--amber-bg); }
+        .compte-badge.off { color:var(--red-text); background:var(--red-bg); }
+        .btn-compte { min-width:110px; border:1px solid var(--border); border-radius:10px; padding:9px 11px; background:var(--white); color:var(--navy); font-size:11px; font-weight:800; cursor:pointer; }
+        .btn-compte.desactiver { border-color:var(--red-border); color:var(--red-text); background:var(--red-bg); }
+        .btn-compte.activer { border-color:#a7f3d0; color:var(--green-text); background:var(--green-bg); }
+        @media (max-width:600px) { .comptes-top { flex-direction:column; } .comptes-stats { grid-template-columns:1fr 1fr 1fr; } .compte-card { grid-template-columns:1fr; } .btn-compte { width:100%; } }
+
+</style>
 
 <style id="refonte-visuelle-2026">
     :root {
@@ -609,6 +633,7 @@
             <button id="tab-registre" class="actif" onclick="basculerOnglet('registre')">📊 Liste cuisine</button>
             <button id="tab-actuelle" onclick="basculerOnglet('actuelle')">📅 Semaine en cours</button>
             <button id="tab-suivante" onclick="basculerOnglet('suivante')">⏩ Semaine suivante</button>
+            <button id="tab-comptes" onclick="basculerOnglet('comptes')">👥 Comptes</button>
         </div>
 
         <!-- ══════ SECTION MENUS ══════ -->
@@ -650,6 +675,27 @@
             </div>
         </div>
 
+        <!-- ══════ SECTION COMPTES ══════ -->
+        <div id="section-comptes" class="hidden">
+            <div class="comptes-top">
+                <div>
+                    <div class="comptes-title">Comptes des agents</div>
+                    <div class="comptes-sub">Les agents créent et récupèrent eux-mêmes leur compte. Vous pouvez uniquement désactiver un compte en cas de besoin.</div>
+                </div>
+                <button class="btn-actualiser" onclick="chargerUtilisateurs()">🔄 Actualiser</button>
+            </div>
+            <div class="comptes-stats">
+                <div class="stat-card"><div id="comptes-total" class="stat-val">—</div><div class="stat-lbl">Comptes</div></div>
+                <div class="stat-card b"><div id="comptes-actifs" class="stat-val">—</div><div class="stat-lbl">Actifs</div></div>
+                <div class="stat-card a"><div id="comptes-attente" class="stat-val">—</div><div class="stat-lbl">À valider</div></div>
+            </div>
+            <div class="comptes-recherche-wrap">
+                <input id="comptes-recherche" class="comptes-recherche" type="search" placeholder="Rechercher un nom, identifiant ou e-mail" oninput="afficherUtilisateurs()">
+            </div>
+            <div id="zone-comptes"><div class="chargement-inline">🔄 Chargement…</div></div>
+        </div>
+
+
     </div>
 </div>
 
@@ -664,6 +710,7 @@ let semaineSelectionnee = 'actuelle';
 let menusServeurComplets = {};
 let commandesDuJour = [];
 let jourAffiché = '';
+let utilisateursAdmin = [];
 
 // ─── API GITHUB PAGES ↔ APPS SCRIPT ──────────────────────────────────────────
 function identifiantAleatoire(prefixe = '') {
@@ -847,15 +894,68 @@ function echapperAttribut(valeur) { return echapperHTML(valeur).replace(/`/g, '&
 
 // ─── ONGLETS ──────────────────────────────────────────────────────────────────
 function basculerOnglet(onglet) {
-    ['registre','actuelle','suivante'].forEach(o => {
+    ['registre','actuelle','suivante','comptes'].forEach(o => {
         document.getElementById('tab-'+o).classList.toggle('actif', o === onglet);
     });
-    document.getElementById('section-menus').classList.toggle('hidden', onglet === 'registre');
+    document.getElementById('section-menus').classList.toggle('hidden', onglet === 'registre' || onglet === 'comptes');
     document.getElementById('section-registre').classList.toggle('hidden', onglet !== 'registre');
+    document.getElementById('section-comptes').classList.toggle('hidden', onglet !== 'comptes');
     if (onglet === 'registre') chargerJour();
+    else if (onglet === 'comptes') chargerUtilisateurs();
     else {
         semaineSelectionnee = onglet;
         genererInterfaceMenus();
+    }
+}
+
+// ─── COMPTES UTILISATEURS ─────────────────────────────────────────────────────
+async function chargerUtilisateurs() {
+    const zone = document.getElementById('zone-comptes');
+    zone.innerHTML = '<div class="chargement-inline">🔄 Chargement…</div>';
+    try {
+        const resultat = await apiGet('obtenirUtilisateursAdmin', { token: tokenAdmin() });
+        utilisateursAdmin = resultat.data || [];
+        document.getElementById('comptes-total').textContent = utilisateursAdmin.length;
+        document.getElementById('comptes-actifs').textContent = utilisateursAdmin.filter(u => u.actif).length;
+        document.getElementById('comptes-attente').textContent = utilisateursAdmin.filter(u => !u.verifie).length;
+        afficherUtilisateurs();
+    } catch (erreur) { traiterErreurAdmin(erreur); }
+}
+
+function afficherUtilisateurs() {
+    const zone = document.getElementById('zone-comptes');
+    const q = (document.getElementById('comptes-recherche')?.value || '').trim().toLocaleLowerCase('fr-FR');
+    const liste = utilisateursAdmin.filter(u => !q || [u.nom,u.identifiant,u.email].some(v => String(v || '').toLocaleLowerCase('fr-FR').includes(q)));
+    if (!liste.length) { zone.innerHTML = '<div class="no-data">Aucun compte correspondant.</div>'; return; }
+    zone.innerHTML = liste.map(u => {
+        const date = u.derniereConnexion ? new Date(u.derniereConnexion).toLocaleDateString('fr-FR') : 'jamais';
+        return `<div class="compte-card ${u.actif ? '' : 'inactif'}" id="compte-${echapperAttribut(u.id)}">
+            <div>
+                <div class="compte-nom">${echapperHTML(u.nom)}</div>
+                <div class="compte-meta">@${echapperHTML(u.identifiant)} · ${echapperHTML(u.email)}<br>Dernière connexion : ${echapperHTML(date)}</div>
+                <div class="compte-badges">
+                    <span class="compte-badge ${u.verifie ? 'ok' : 'attente'}">${u.verifie ? 'E-mail validé' : 'Validation en attente'}</span>
+                    <span class="compte-badge ${u.actif ? 'ok' : 'off'}">${u.actif ? 'Actif' : 'Désactivé'}</span>
+                </div>
+            </div>
+            <button class="btn-compte ${u.actif ? 'desactiver' : 'activer'}" onclick="basculerCompte('${echapperAttribut(u.id)}', ${u.actif ? 'false' : 'true'}, this)">${u.actif ? 'Désactiver' : 'Réactiver'}</button>
+        </div>`;
+    }).join('');
+}
+
+async function basculerCompte(userId, actif, bouton) {
+    const action = actif ? 'réactiver' : 'désactiver';
+    if (!confirm(`Confirmer : ${action} ce compte ?`)) return;
+    bouton.disabled = true;
+    const ancien = bouton.textContent;
+    bouton.textContent = '…';
+    try {
+        await envoyerAction('basculerUtilisateurActif', { token: tokenAdmin(), userId, actif });
+        await chargerUtilisateurs();
+    } catch (erreur) {
+        bouton.disabled = false;
+        bouton.textContent = ancien;
+        traiterErreurAdmin(erreur);
     }
 }
 
