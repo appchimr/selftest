@@ -663,7 +663,7 @@
         <div class="auth-panel hidden" id="auth-signup">
             <h1 class="auth-title">Créer mon compte</h1>
             <p class="auth-sub">Une validation par e-mail est nécessaire.</p>
-            <form onsubmit="creerCompteUtilisateur(event)">
+            <form id="form-signup" onsubmit="creerCompteUtilisateur(event)">
                 <label class="auth-label" for="signup-nom">Nom et prénom</label>
                 <input class="auth-input" id="signup-nom" autocomplete="name" required maxlength="100">
                 <label class="auth-label" for="signup-identifiant">Identifiant choisi</label>
@@ -684,7 +684,7 @@
                     <input id="signup-humain" type="checkbox" required>
                     <span>Je suis un être humain</span>
                 </label>
-                <button class="auth-primary" id="btn-signup" type="submit">Créer mon compte</button>
+                <button class="auth-primary" id="btn-signup" type="submit" disabled>Créer mon compte</button>
             </form>
             <div class="auth-links"><button type="button" onclick="afficherPanneauAuth('login')">J’ai déjà un compte</button></div>
         </div>
@@ -1470,8 +1470,37 @@ function boutonEnCours(id, actif, texte) {
     const btn = document.getElementById(id);
     if (!btn) return;
     if (!btn.dataset.texte) btn.dataset.texte = btn.textContent;
+    btn.dataset.enCours = actif ? '1' : '0';
     btn.disabled = actif;
     btn.textContent = actif ? texte : btn.dataset.texte;
+    if (!actif && id === 'btn-signup') mettreAJourEtatInscription();
+}
+
+function formulaireInscriptionComplet() {
+    const form = document.getElementById('form-signup');
+    if (!form) return false;
+    const mdp = document.getElementById('signup-password').value;
+    const confirmation = document.getElementById('signup-password2').value;
+    return form.checkValidity() && mdp === confirmation && document.getElementById('signup-humain').checked;
+}
+
+function mettreAJourEtatInscription() {
+    const btn = document.getElementById('btn-signup');
+    if (!btn || btn.dataset.enCours === '1') return;
+    btn.disabled = !formulaireInscriptionComplet();
+}
+
+function initialiserFormulaireInscription() {
+    const form = document.getElementById('form-signup');
+    if (!form) return;
+    form.addEventListener('input', mettreAJourEtatInscription);
+    form.addEventListener('change', mettreAJourEtatInscription);
+    // Sur mobile ou au clavier, la touche Entrée ne doit pas créer le compte
+    // accidentellement : seule l'action explicite sur le bouton valide le formulaire.
+    form.addEventListener('keydown', event => {
+        if (event.key === 'Enter' && event.target.id !== 'btn-signup') event.preventDefault();
+    });
+    mettreAJourEtatInscription();
 }
 
 async function connecterUtilisateur(event) {
@@ -1500,6 +1529,12 @@ async function connecterUtilisateur(event) {
 
 async function creerCompteUtilisateur(event) {
     event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity() || !formulaireInscriptionComplet()) {
+        messageAuth('Terminez tous les champs et confirmez votre mot de passe avant de créer le compte.');
+        mettreAJourEtatInscription();
+        return;
+    }
     const mdp = document.getElementById('signup-password').value;
     if (mdp !== document.getElementById('signup-password2').value) { messageAuth('Les deux mots de passe ne correspondent pas.'); return; }
     boutonEnCours('btn-signup', true, 'Création…');
@@ -1516,7 +1551,12 @@ async function creerCompteUtilisateur(event) {
         document.getElementById('verify-identifiant').value = identifiant;
         document.getElementById('verify-message').textContent = `Un code a été envoyé à ${resultat.data.emailMasque}.`;
         afficherPanneauAuth('verify');
-        messageAuth('Compte créé. Consultez votre e-mail pour le valider.', 'success');
+        messageAuth(
+            resultat.data.compteRepris
+                ? 'Inscription en attente reprise. Un nouveau code vient d’être envoyé.'
+                : 'Compte créé. Consultez votre e-mail pour le valider.',
+            'success'
+        );
     } catch (erreur) { messageAuth(erreur.message); }
     finally { boutonEnCours('btn-signup', false); }
 }
@@ -1611,6 +1651,7 @@ async function restaurerSessionUtilisateur() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+    initialiserFormulaireInscription();
     const logo = document.querySelector('header .logo-icon img');
     if (logo) document.getElementById('auth-logo-mirror').src = logo.src;
     const ancien = localStorage.getItem('jetonUserSelf');
