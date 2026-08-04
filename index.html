@@ -904,7 +904,7 @@ async function apiGet(action, params = {}) {
 }
 
 async function attendreResultatOperation(requestId) {
-    for (let tentative = 0; tentative < 35; tentative++) {
+    for (let tentative = 0; tentative < 60; tentative++) {
         await new Promise(resolve => setTimeout(resolve, tentative < 4 ? 300 : 500));
         const resultat = await apiGet('obtenirResultatOperation', { requestId });
         if (!resultat.pending) return resultat;
@@ -1557,7 +1557,22 @@ async function creerCompteUtilisateur(event) {
                 : 'Compte créé. Consultez votre e-mail pour le valider.',
             'success'
         );
-    } catch (erreur) { messageAuth(erreur.message); }
+    } catch (erreur) {
+        const identifiant = document.getElementById('signup-identifiant').value.trim();
+        const message = String(erreur && erreur.message ? erreur.message : 'Erreur inconnue.');
+
+        // Si le serveur a envoyé l'e-mail mais que la confirmation technique
+        // tarde, l'utilisateur ne doit pas rester bloqué sur l'inscription.
+        if (message.includes("n'a pas confirmé l'opération")) {
+            document.getElementById('verify-identifiant').value = identifiant;
+            document.getElementById('verify-message').textContent =
+                'Si vous avez reçu le code par e-mail, saisissez-le ci-dessous.';
+            afficherPanneauAuth('verify');
+            messageAuth('Le code a peut-être déjà été envoyé. Vous pouvez poursuivre la validation.', 'success');
+        } else {
+            messageAuth(message);
+        }
+    }
     finally { boutonEnCours('btn-signup', false); }
 }
 
