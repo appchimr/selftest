@@ -875,6 +875,47 @@ let menusDuServeur       = {};
 let mesReservations      = [];
 let menusJourSelectionne = {};
 
+const CACHE_MENUS = 'cacheMenusSelfCHIMR_v3';
+const CACHE_RESERVATIONS = 'cacheReservationsSelfCHIMR_v3';
+
+function lireCacheLocal(cle, valeurParDefaut) {
+    try {
+        const brut = localStorage.getItem(cle);
+        if (!brut) return valeurParDefaut;
+        const enveloppe = JSON.parse(brut);
+        return enveloppe && enveloppe.data !== undefined ? enveloppe.data : valeurParDefaut;
+    } catch (_) { return valeurParDefaut; }
+}
+
+function ecrireCacheLocal(cle, data) {
+    try { localStorage.setItem(cle, JSON.stringify({ date: Date.now(), data })); }
+    catch (_) { /* Le cache local est seulement un confort. */ }
+}
+
+function afficherApplicationUtilisateur() {
+    document.getElementById('zone-chargement').classList.add('hidden');
+    document.getElementById('app-contenu').classList.remove('hidden');
+}
+
+function restaurerInterfaceLocaleUtilisateur() {
+    const menusCache = lireCacheLocal(CACHE_MENUS, {});
+    if (menusCache && Object.keys(menusCache).length) menusDuServeur = menusCache;
+
+    const compte = lireCompteLocal();
+    const token = tokenSessionUtilisateur();
+    if (compte && token) {
+        utilisateurActif = compte;
+        mettreAJourGreeting(compte.nom);
+        mesReservations = lireCacheLocal(CACHE_RESERVATIONS, []);
+    }
+
+    afficherApplicationUtilisateur();
+    genererCalendrier();
+    verifierAlertesChangement();
+    if (utilisateurActif) afficherMesReservations();
+    return !!utilisateurActif;
+}
+
 // ─── API GITHUB PAGES ↔ APPS SCRIPT ──────────────────────────────────────────
 function identifiantAleatoire(prefixe = '') {
     if (window.crypto && crypto.randomUUID) return prefixe + crypto.randomUUID().replace(/-/g, '');
@@ -982,14 +1023,17 @@ function envoyerParIframe(action, donnees, requestId) {
         // navigateur, politiques cross-origin) se révèle inutile. Le premier
         // des deux chemins qui répond fait gagner la course ; l'autre est
         // simplement ignoré grâce au verrou `termine`.
-        (async () => {
-            try {
-                const resultat = await attendreResultatOperation(requestId);
-                finir(resolve, resultatOuErreur(resultat));
-            } catch (erreur) {
-                finir(reject, erreur);
-            }
-        })();
+        setTimeout(() => {
+            if (termine) return;
+            (async () => {
+                try {
+                    const resultat = await attendreResultatOperation(requestId);
+                    finir(resolve, resultatOuErreur(resultat));
+                } catch (erreur) {
+                    finir(reject, erreur);
+                }
+            })();
+        }, 1200);
     });
 }
 
@@ -1090,6 +1134,7 @@ async function chargerMenus(silencieux = false) {
     try {
         const resultat = await apiGet('obtenirMenus');
         menusDuServeur = resultat.data || {};
+        ecrireCacheLocal(CACHE_MENUS, menusDuServeur);
         if (!silencieux) {
             document.getElementById('zone-chargement').classList.add('hidden');
             document.getElementById('app-contenu').classList.remove('hidden');
@@ -1118,6 +1163,7 @@ async function chargerReservationsUtilisateur() {
     try {
         const resultat = await apiGet('obtenirMesReservations', { token });
         mesReservations = resultat.data || [];
+        ecrireCacheLocal(CACHE_RESERVATIONS, mesReservations);
         verifierAlertesChangement();
         verifierDoublon();
         return mesReservations;
@@ -1135,6 +1181,35 @@ async function chargerDonneesInitiales() {
         await Promise.all([chargerMenus(), chargerReservationsUtilisateur()]);
     } catch (_) {
         // chargerMenus affiche déjà l'erreur principale.
+    }
+}
+
+async function synchroniserDemarrageUtilisateur() {
+    try {
+        const resultat = await apiGet('demarrerUtilisateur', { token: tokenSessionUtilisateur() });
+        const data = resultat.data || {};
+        menusDuServeur = data.menus || {};
+        ecrireCacheLocal(CACHE_MENUS, menusDuServeur);
+
+        if (data.sessionValide && data.utilisateur) {
+            if (data.token) localStorage.setItem('sessionSelfCHIMR', data.token);
+            utilisateurActif = data.utilisateur;
+            localStorage.setItem('compteSelfCHIMR', JSON.stringify(utilisateurActif));
+            mettreAJourGreeting(utilisateurActif.nom);
+            mesReservations = data.reservations || [];
+            ecrireCacheLocal(CACHE_RESERVATIONS, mesReservations);
+            fermerEspaceCompte();
+        } else if (tokenSessionUtilisateur()) {
+            effacerSessionLocale();
+            ouvrirEspaceCompte('login', true);
+        }
+
+        afficherApplicationUtilisateur();
+        genererCalendrier();
+        verifierAlertesChangement();
+        if (utilisateurActif) afficherMesReservations();
+    } catch (_) {
+        // En cas de réseau lent ou indisponible, l'interface locale reste utilisable.
     }
 }
 
@@ -1586,8 +1661,8 @@ async function connecterUtilisateur(event) {
         });
         enregistrerSessionLocale(resultat.data);
         fermerEspaceCompte();
-        await chargerReservationsUtilisateur();
-        genererCalendrier();
+        afficherApplicationUtilisateur();
+        synchroniserDemarrageUtilisateur();
     } catch (erreur) {
         messageAuth(erreur.message);
         if (erreur.code === 'COMPTE_NON_VERIFIE') {
@@ -1658,8 +1733,8 @@ async function verifierCompteUtilisateur(event) {
         });
         enregistrerSessionLocale(resultat.data);
         fermerEspaceCompte();
-        await chargerReservationsUtilisateur();
-        genererCalendrier();
+        afficherApplicationUtilisateur();
+        synchroniserDemarrageUtilisateur();
     } catch (erreur) { messageAuth(erreur.message); }
     finally { boutonEnCours('btn-verify', false); }
 }
@@ -1698,7 +1773,8 @@ async function reinitialiserMotDePasseUtilisateur(event) {
         });
         enregistrerSessionLocale(resultat.data);
         fermerEspaceCompte();
-        await chargerReservationsUtilisateur();
+        afficherApplicationUtilisateur();
+        synchroniserDemarrageUtilisateur();
     } catch (erreur) { messageAuth(erreur.message); }
     finally { boutonEnCours('btn-reset', false); }
 }
@@ -1735,7 +1811,7 @@ async function restaurerSessionUtilisateur() {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
     initialiserFormulaireInscription();
     const logo = document.querySelector('header .logo-icon img');
     if (logo) document.getElementById('auth-logo-mirror').src = logo.src;
@@ -1744,21 +1820,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     const heureSave = localStorage.getItem('heureUserSelf');
     if (heureSave) document.getElementById('heure_retrait').value = heureSave;
 
-    // Sans session, l'écran de connexion apparaît immédiatement pendant que
-    // les menus se chargent en arrière-plan.
-    if (!tokenSessionUtilisateur()) ouvrirEspaceCompte('login', true);
+    const connecteLocalement = restaurerInterfaceLocaleUtilisateur();
+    if (!connecteLocalement) ouvrirEspaceCompte('login', true);
 
-    // Menus et vérification de session sont indépendants : lancement parallèle.
-    const menusPromise = chargerMenus().catch(() => {});
-    const sessionPromise = restaurerSessionUtilisateur();
-    const [, connecte] = await Promise.all([menusPromise, sessionPromise]);
-
-    if (connecte) {
-        await chargerReservationsUtilisateur().catch(() => {});
-        genererCalendrier();
-    } else if (document.getElementById('auth-overlay').classList.contains('hidden')) {
-        ouvrirEspaceCompte('login', true);
-    }
+    // Aucun await : la page est affichée tout de suite, puis synchronisée en silence.
+    synchroniserDemarrageUtilisateur();
 });
 
 </script>

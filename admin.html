@@ -713,6 +713,39 @@ let commandesDuJour = [];
 let jourAffiché = '';
 let utilisateursAdmin = [];
 
+const CACHE_ADMIN_MENUS = 'cacheAdminMenusSelfCHIMR_v3';
+const CACHE_ADMIN_REGISTRES = 'cacheAdminRegistresSelfCHIMR_v3';
+const CACHE_ADMIN_COMPTES = 'cacheAdminComptesSelfCHIMR_v3';
+
+function lireCacheAdmin(cle, valeurParDefaut) {
+    try {
+        const brut = localStorage.getItem(cle);
+        if (!brut) return valeurParDefaut;
+        const enveloppe = JSON.parse(brut);
+        return enveloppe && enveloppe.data !== undefined ? enveloppe.data : valeurParDefaut;
+    } catch (_) { return valeurParDefaut; }
+}
+
+function ecrireCacheAdmin(cle, data) {
+    try { localStorage.setItem(cle, JSON.stringify({ date: Date.now(), data })); }
+    catch (_) { /* Cache facultatif. */ }
+}
+
+function afficherTableauAdminImmediatement() {
+    document.getElementById('ecran-login').style.display = 'none';
+    document.getElementById('app-admin').style.display = 'block';
+    remplirSelecteurJours();
+
+    menusServeurComplets = lireCacheAdmin(CACHE_ADMIN_MENUS, {});
+    const registres = lireCacheAdmin(CACHE_ADMIN_REGISTRES, {});
+    const select = document.getElementById('select-jour');
+    if (select.options.length) {
+        jourAffiché = select.value;
+        commandesDuJour = registres[jourAffiché] || [];
+        afficherRegistre();
+    }
+}
+
 // ─── API GITHUB PAGES ↔ APPS SCRIPT ──────────────────────────────────────────
 function identifiantAleatoire(prefixe = '') {
     if (window.crypto && crypto.randomUUID) return prefixe + crypto.randomUUID().replace(/-/g, '');
@@ -729,7 +762,7 @@ function clientAdminId() {
     return id;
 }
 
-function tokenAdmin() { return sessionStorage.getItem('admin_token') || ''; }
+function tokenAdmin() { return localStorage.getItem('admin_token') || ''; }
 
 async function apiGet(action, params = {}) {
     const url = new URL(URL_SCRIPT_GOOGLE);
@@ -830,14 +863,17 @@ function envoyerParIframe(action, donnees, requestId) {
         // navigateur, politiques cross-origin) se révèle inutile. Le premier
         // des deux chemins qui répond fait gagner la course ; l'autre est
         // simplement ignoré grâce au verrou `termine`.
-        (async () => {
-            try {
-                const resultat = await attendreResultatOperation(requestId);
-                finir(resolve, resultatOuErreur(resultat));
-            } catch (erreur) {
-                finir(reject, erreur);
-            }
-        })();
+        setTimeout(() => {
+            if (termine) return;
+            (async () => {
+                try {
+                    const resultat = await attendreResultatOperation(requestId);
+                    finir(resolve, resultatOuErreur(resultat));
+                } catch (erreur) {
+                    finir(reject, erreur);
+                }
+            })();
+        }, 1200);
     });
 }
 
@@ -848,7 +884,7 @@ async function envoyerAction(action, donnees = {}) {
 
 function traiterErreurAdmin(erreur, afficher = true) {
     if (erreur?.code === 'SESSION_EXPIREE') {
-        sessionStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_token');
         document.getElementById('app-admin').style.display = 'none';
         document.getElementById('ecran-login').style.display = 'flex';
         const el = document.getElementById('login-erreur');
@@ -874,10 +910,9 @@ async function seConnecter() {
             motDePasse: saisie,
             clientId: clientAdminId()
         });
-        sessionStorage.setItem('admin_token', resultat.data.token);
+        localStorage.setItem('admin_token', resultat.data.token);
         document.getElementById('login-pwd').value = '';
-        document.getElementById('ecran-login').style.display = 'none';
-        document.getElementById('app-admin').style.display = 'block';
+        afficherTableauAdminImmediatement();
 
         // L'accès au tableau de bord est immédiat après validation du mot de passe.
         // Les données du registre et des menus se chargent ensuite en parallèle.
@@ -896,7 +931,7 @@ async function seConnecter() {
 
 async function seDeconnecter() {
     const token = tokenAdmin();
-    sessionStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_token');
     document.getElementById('app-admin').style.display = 'none';
     document.getElementById('ecran-login').style.display = 'flex';
     document.getElementById('login-pwd').value = '';
@@ -906,36 +941,34 @@ async function seDeconnecter() {
     }
 }
 
-async function restaurerSessionAdmin() {
+function restaurerSessionAdmin() {
     const token = tokenAdmin();
     if (!token) return false;
-    try {
-        await apiGet('verifierSessionAdmin', { token });
-        document.getElementById('ecran-login').style.display = 'none';
-        document.getElementById('app-admin').style.display = 'block';
-        initialiserAdmin();
-        return true;
-    } catch (_) {
-        sessionStorage.removeItem('admin_token');
-        return false;
-    }
+    afficherTableauAdminImmediatement();
+    initialiserAdmin();
+    return true;
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 async function initialiserAdmin() {
     remplirSelecteurJours();
-
-    // Les deux lectures sont indépendantes : les lancer ensemble évite
-    // d'attendre deux allers-retours Apps Script successifs.
-    const menusPromise = apiGet('obtenirMenusAdmin', { token: tokenAdmin() });
-    const registrePromise = chargerJour();
+    const select = document.getElementById('select-jour');
+    if (!select.options.length) return;
+    const date = select.value;
 
     try {
-        const resultatMenus = await menusPromise;
-        menusServeurComplets = resultatMenus.data || {};
-        await registrePromise;
+        const resultat = await apiGet('demarrerAdmin', { token: tokenAdmin(), date });
+        const data = resultat.data || {};
+        menusServeurComplets = data.menus || {};
+        commandesDuJour = data.registre || [];
+        jourAffiché = data.date || date;
+        ecrireCacheAdmin(CACHE_ADMIN_MENUS, menusServeurComplets);
+        const registres = lireCacheAdmin(CACHE_ADMIN_REGISTRES, {});
+        registres[jourAffiché] = commandesDuJour;
+        ecrireCacheAdmin(CACHE_ADMIN_REGISTRES, registres);
+        afficherRegistre();
     } catch (erreur) {
-        traiterErreurAdmin(erreur);
+        traiterErreurAdmin(erreur, false);
     }
 }
 
@@ -1001,10 +1034,20 @@ function basculerOnglet(onglet) {
 // ─── COMPTES UTILISATEURS ─────────────────────────────────────────────────────
 async function chargerUtilisateurs() {
     const zone = document.getElementById('zone-comptes');
-    zone.innerHTML = '<div class="chargement-inline">🔄 Chargement…</div>';
+    const cache = lireCacheAdmin(CACHE_ADMIN_COMPTES, []);
+    if (cache.length) {
+        utilisateursAdmin = cache;
+        document.getElementById('comptes-total').textContent = utilisateursAdmin.length;
+        document.getElementById('comptes-actifs').textContent = utilisateursAdmin.filter(u => u.actif).length;
+        document.getElementById('comptes-attente').textContent = utilisateursAdmin.filter(u => !u.verifie).length;
+        afficherUtilisateurs();
+    } else {
+        zone.innerHTML = '<div class="chargement-inline">🔄 Chargement…</div>';
+    }
     try {
         const resultat = await apiGet('obtenirUtilisateursAdmin', { token: tokenAdmin() });
         utilisateursAdmin = resultat.data || [];
+        ecrireCacheAdmin(CACHE_ADMIN_COMPTES, utilisateursAdmin);
         document.getElementById('comptes-total').textContent = utilisateursAdmin.length;
         document.getElementById('comptes-actifs').textContent = utilisateursAdmin.filter(u => u.actif).length;
         document.getElementById('comptes-attente').textContent = utilisateursAdmin.filter(u => !u.verifie).length;
@@ -1222,6 +1265,7 @@ document.getElementById('form-admin').addEventListener('submit', async function(
         });
         const resultat = await apiGet('obtenirMenusAdmin', { token: tokenAdmin() });
         menusServeurComplets = resultat.data || {};
+        ecrireCacheAdmin(CACHE_ADMIN_MENUS, menusServeurComplets);
         genererInterfaceMenus();
         afficherBanniere(true);
     } catch (erreur) {
@@ -1239,8 +1283,14 @@ async function chargerJour() {
     jourAffiché = select.value;
     const label = select.options[select.selectedIndex]?.text || jourAffiché;
     document.getElementById('section-registre').setAttribute('data-date-print', label.toUpperCase());
-    document.getElementById('zone-registre').innerHTML = '<div class="chargement-inline">🔄 Chargement…</div>';
-    ['total-total','total-a','total-b','total-emporter'].forEach(id => document.getElementById(id).textContent = '—');
+    const registresCache = lireCacheAdmin(CACHE_ADMIN_REGISTRES, {});
+    if (registresCache[jourAffiché]) {
+        commandesDuJour = registresCache[jourAffiché];
+        afficherRegistre();
+    } else {
+        document.getElementById('zone-registre').innerHTML = '<div class="chargement-inline">🔄 Chargement…</div>';
+        ['total-total','total-a','total-b','total-emporter'].forEach(id => document.getElementById(id).textContent = '—');
+    }
 
     try {
         const resultat = await apiGet('obtenirRegistre', {
@@ -1248,6 +1298,9 @@ async function chargerJour() {
             date: jourAffiché
         });
         commandesDuJour = resultat.data || [];
+        const registres = lireCacheAdmin(CACHE_ADMIN_REGISTRES, {});
+        registres[jourAffiché] = commandesDuJour;
+        ecrireCacheAdmin(CACHE_ADMIN_REGISTRES, registres);
         afficherRegistre();
     } catch (erreur) {
         traiterErreurAdmin(erreur, false);
@@ -1324,9 +1377,8 @@ function exporterCSV() {
 }
 
 // ─── INIT PAGE ────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', async () => {
-    const restauree = await restaurerSessionAdmin();
-    if (!restauree) {
+window.addEventListener('DOMContentLoaded', () => {
+    if (!restaurerSessionAdmin()) {
         document.getElementById('ecran-login').style.display = 'flex';
         document.getElementById('app-admin').style.display = 'none';
     }
