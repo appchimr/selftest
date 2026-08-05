@@ -691,7 +691,7 @@
                 <div class="stat-card a"><div id="comptes-attente" class="stat-val">—</div><div class="stat-lbl">À valider</div></div>
             </div>
             <div class="comptes-recherche-wrap">
-                <input id="comptes-recherche" class="comptes-recherche" type="search" placeholder="Rechercher un nom, identifiant ou e-mail" oninput="afficherUtilisateurs()">
+                <input id="comptes-recherche" class="comptes-recherche" type="search" placeholder="Rechercher un nom ou e-mail" oninput="afficherUtilisateurs()">
             </div>
             <div id="zone-comptes"><div class="chargement-inline">🔄 Chargement…</div></div>
         </div>
@@ -1012,14 +1012,14 @@ async function chargerUtilisateurs() {
 function afficherUtilisateurs() {
     const zone = document.getElementById('zone-comptes');
     const q = (document.getElementById('comptes-recherche')?.value || '').trim().toLocaleLowerCase('fr-FR');
-    const liste = utilisateursAdmin.filter(u => !q || [u.nom,u.identifiant,u.email].some(v => String(v || '').toLocaleLowerCase('fr-FR').includes(q)));
+    const liste = utilisateursAdmin.filter(u => !q || [u.nom,u.email].some(v => String(v || '').toLocaleLowerCase('fr-FR').includes(q)));
     if (!liste.length) { zone.innerHTML = '<div class="no-data">Aucun compte correspondant.</div>'; return; }
     zone.innerHTML = liste.map(u => {
         const date = u.derniereConnexion ? new Date(u.derniereConnexion).toLocaleDateString('fr-FR') : 'jamais';
         return `<div class="compte-card ${u.actif ? '' : 'inactif'}" id="compte-${echapperAttribut(u.id)}">
             <div>
                 <div class="compte-nom">${echapperHTML(u.nom)}</div>
-                <div class="compte-meta">@${echapperHTML(u.identifiant)} · ${echapperHTML(u.email)}<br>Dernière connexion : ${echapperHTML(date)}</div>
+                <div class="compte-meta">${echapperHTML(u.email)}<br>Dernière connexion : ${echapperHTML(date)}</div>
                 <div class="compte-badges">
                     <span class="compte-badge ${u.verifie ? 'ok' : 'attente'}">${u.verifie ? 'E-mail validé' : 'Validation en attente'}</span>
                     <span class="compte-badge ${u.actif ? 'ok' : 'off'}">${u.actif ? 'Actif' : 'Désactivé'}</span>

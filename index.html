@@ -648,8 +648,8 @@
             <h1 class="auth-title" id="auth-title">Se connecter</h1>
             <p class="auth-sub">Retrouvez vos réservations sur tous vos appareils.</p>
             <form onsubmit="connecterUtilisateur(event)">
-                <label class="auth-label" for="login-identifiant">Identifiant ou e-mail</label>
-                <input class="auth-input" id="login-identifiant" autocomplete="username" required>
+                <label class="auth-label" for="login-email">Adresse e-mail</label>
+                <input class="auth-input" id="login-email" type="email" autocomplete="email" required>
                 <label class="auth-label" for="login-password">Mot de passe</label>
                 <input class="auth-input" id="login-password" type="password" autocomplete="current-password" required>
                 <button class="auth-primary" id="btn-login-user" type="submit">Se connecter</button>
@@ -666,9 +666,6 @@
             <form id="form-signup" onsubmit="creerCompteUtilisateur(event)">
                 <label class="auth-label" for="signup-nom">Nom et prénom</label>
                 <input class="auth-input" id="signup-nom" autocomplete="name" required maxlength="100">
-                <label class="auth-label" for="signup-identifiant">Identifiant choisi</label>
-                <input class="auth-input" id="signup-identifiant" autocomplete="username" required maxlength="50" pattern="[A-Za-z0-9._-]{3,50}">
-                <div class="auth-help">Lettres, chiffres, points, tirets ou underscores.</div>
                 <label class="auth-label" for="signup-email">Adresse e-mail</label>
                 <input class="auth-input" id="signup-email" type="email" autocomplete="email" required maxlength="160">
                 <label class="auth-label" for="signup-password">Mot de passe</label>
@@ -693,8 +690,8 @@
             <h1 class="auth-title">Valider mon compte</h1>
             <p class="auth-sub" id="verify-message">Saisissez le code à six chiffres reçu par e-mail.</p>
             <form onsubmit="verifierCompteUtilisateur(event)">
-                <label class="auth-label" for="verify-identifiant">Identifiant ou e-mail</label>
-                <input class="auth-input" id="verify-identifiant" autocomplete="username" required>
+                <label class="auth-label" for="verify-email">Adresse e-mail</label>
+                <input class="auth-input" id="verify-email" type="email" autocomplete="email" required>
                 <label class="auth-label" for="verify-code">Code reçu</label>
                 <input class="auth-input auth-code" id="verify-code" inputmode="numeric" autocomplete="one-time-code" required maxlength="6" pattern="[0-9]{6}">
                 <button class="auth-primary" id="btn-verify" type="submit">Valider et me connecter</button>
@@ -709,8 +706,8 @@
             <h1 class="auth-title">Mot de passe oublié</h1>
             <p class="auth-sub">Un code de réinitialisation sera envoyé à l’adresse associée au compte.</p>
             <form onsubmit="demanderReinitialisation(event)">
-                <label class="auth-label" for="forgot-identifiant">Identifiant ou e-mail</label>
-                <input class="auth-input" id="forgot-identifiant" autocomplete="username" required>
+                <label class="auth-label" for="forgot-email">Adresse e-mail</label>
+                <input class="auth-input" id="forgot-email" type="email" autocomplete="email" required>
                 <button class="auth-primary" id="btn-forgot" type="submit">Recevoir un code</button>
             </form>
             <div class="auth-links"><button type="button" onclick="afficherPanneauAuth('login')">Retour à la connexion</button></div>
@@ -720,8 +717,8 @@
             <h1 class="auth-title">Nouveau mot de passe</h1>
             <p class="auth-sub">Saisissez le code reçu et choisissez un nouveau mot de passe.</p>
             <form onsubmit="reinitialiserMotDePasseUtilisateur(event)">
-                <label class="auth-label" for="reset-identifiant">Identifiant ou e-mail</label>
-                <input class="auth-input" id="reset-identifiant" autocomplete="username" required>
+                <label class="auth-label" for="reset-email">Adresse e-mail</label>
+                <input class="auth-input" id="reset-email" type="email" autocomplete="email" required>
                 <label class="auth-label" for="reset-code">Code reçu</label>
                 <input class="auth-input auth-code" id="reset-code" inputmode="numeric" autocomplete="one-time-code" required maxlength="6" pattern="[0-9]{6}">
                 <label class="auth-label" for="reset-password">Nouveau mot de passe</label>
@@ -736,7 +733,7 @@
             <h1 class="auth-title">Mon compte</h1>
             <div class="account-summary">
                 <div class="account-avatar">👤</div>
-                <div><strong id="account-name">—</strong><span id="account-email">—</span><small id="account-login">—</small></div>
+                <div><strong id="account-name">—</strong><span id="account-email">—</span></div>
             </div>
             <button class="auth-secondary" type="button" onclick="deconnecterUtilisateur(false)">Déconnecter cet appareil</button>
             <button class="auth-danger" type="button" onclick="deconnecterUtilisateur(true)">Déconnecter tous mes appareils</button>
@@ -1522,7 +1519,6 @@ function ouvrirEspaceCompte(panneau = null, obligatoire = false) {
     if (cible === 'account' && utilisateurActif) {
         document.getElementById('account-name').textContent = utilisateurActif.nom;
         document.getElementById('account-email').textContent = utilisateurActif.email;
-        document.getElementById('account-login').textContent = `Identifiant : ${utilisateurActif.identifiant}`;
     }
     afficherPanneauAuth(cible);
     overlay.classList.remove('hidden');
@@ -1583,7 +1579,7 @@ async function connecterUtilisateur(event) {
     boutonEnCours('btn-login-user', true, 'Connexion…');
     try {
         const resultat = await envoyerAction('connexionUtilisateur', {
-            identifiant: document.getElementById('login-identifiant').value.trim(),
+            email: document.getElementById('login-email').value.trim(),
             motDePasse: document.getElementById('login-password').value,
             legacyUserToken: ancienJetonLocal(),
             appareil: appareilCourant()
@@ -1595,7 +1591,7 @@ async function connecterUtilisateur(event) {
     } catch (erreur) {
         messageAuth(erreur.message);
         if (erreur.code === 'COMPTE_NON_VERIFIE') {
-            document.getElementById('verify-identifiant').value = document.getElementById('login-identifiant').value.trim();
+            document.getElementById('verify-email').value = document.getElementById('login-email').value.trim();
             afficherPanneauAuth('verify');
             messageAuth(erreur.message, 'error');
         }
@@ -1614,16 +1610,15 @@ async function creerCompteUtilisateur(event) {
     if (mdp !== document.getElementById('signup-password2').value) { messageAuth('Les deux mots de passe ne correspondent pas.'); return; }
     boutonEnCours('btn-signup', true, 'Création…');
     try {
-        const identifiant = document.getElementById('signup-identifiant').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
         const resultat = await envoyerAction('creerCompte', {
             nom: document.getElementById('signup-nom').value.trim(),
-            identifiant,
-            email: document.getElementById('signup-email').value.trim(),
+            email,
             motDePasse: mdp,
             humain: document.getElementById('signup-humain').checked,
             siteWeb: document.getElementById('signup-site-web').value.trim()
         });
-        document.getElementById('verify-identifiant').value = identifiant;
+        document.getElementById('verify-email').value = email;
         document.getElementById('verify-message').textContent = `Un code a été envoyé à ${resultat.data.emailMasque}.`;
         afficherPanneauAuth('verify');
         messageAuth(
@@ -1633,13 +1628,13 @@ async function creerCompteUtilisateur(event) {
             'success'
         );
     } catch (erreur) {
-        const identifiant = document.getElementById('signup-identifiant').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
         const message = String(erreur && erreur.message ? erreur.message : 'Erreur inconnue.');
 
         // Si le serveur a envoyé l'e-mail mais que la confirmation technique
         // tarde, l'utilisateur ne doit pas rester bloqué sur l'inscription.
         if (message.includes("n'a pas confirmé l'opération")) {
-            document.getElementById('verify-identifiant').value = identifiant;
+            document.getElementById('verify-email').value = email;
             document.getElementById('verify-message').textContent =
                 'Si vous avez reçu le code par e-mail, saisissez-le ci-dessous.';
             afficherPanneauAuth('verify');
@@ -1656,7 +1651,7 @@ async function verifierCompteUtilisateur(event) {
     boutonEnCours('btn-verify', true, 'Validation…');
     try {
         const resultat = await envoyerAction('verifierCompte', {
-            identifiant: document.getElementById('verify-identifiant').value.trim(),
+            email: document.getElementById('verify-email').value.trim(),
             code: document.getElementById('verify-code').value.trim(),
             legacyUserToken: ancienJetonLocal(),
             appareil: appareilCourant()
@@ -1671,7 +1666,7 @@ async function verifierCompteUtilisateur(event) {
 
 async function renvoyerCodeActivation() {
     try {
-        await envoyerAction('renvoyerCodeActivation', { identifiant: document.getElementById('verify-identifiant').value.trim() });
+        await envoyerAction('renvoyerCodeActivation', { email: document.getElementById('verify-email').value.trim() });
         messageAuth('Un nouveau code a été envoyé si le compte est en attente.', 'success');
     } catch (erreur) { messageAuth(erreur.message); }
 }
@@ -1679,10 +1674,10 @@ async function renvoyerCodeActivation() {
 async function demanderReinitialisation(event) {
     event.preventDefault();
     boutonEnCours('btn-forgot', true, 'Envoi…');
-    const identifiant = document.getElementById('forgot-identifiant').value.trim();
+    const email = document.getElementById('forgot-email').value.trim();
     try {
-        await envoyerAction('motDePasseOublie', { identifiant });
-        document.getElementById('reset-identifiant').value = identifiant;
+        await envoyerAction('motDePasseOublie', { email });
+        document.getElementById('reset-email').value = email;
         afficherPanneauAuth('reset');
         messageAuth('Si le compte existe, un code a été envoyé par e-mail.', 'success');
     } catch (erreur) { messageAuth(erreur.message); }
@@ -1696,7 +1691,7 @@ async function reinitialiserMotDePasseUtilisateur(event) {
     boutonEnCours('btn-reset', true, 'Enregistrement…');
     try {
         const resultat = await envoyerAction('reinitialiserMotDePasse', {
-            identifiant: document.getElementById('reset-identifiant').value.trim(),
+            email: document.getElementById('reset-email').value.trim(),
             code: document.getElementById('reset-code').value.trim(),
             motDePasse: mdp,
             appareil: appareilCourant()
